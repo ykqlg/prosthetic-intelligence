@@ -106,7 +106,7 @@ void BMI088_accel_read_muli_reg(uint8_t reg, uint8_t *data, uint8_t len );
 // void BMI088_accel_write_muli_reg(uint8_t reg, uint8_t *data, uint8_t len );
 void BMI088_accel_soft_reset();
 void log_print(uint8_t *data, uint8_t len);
-void self_test();
+void BMI088_accel_self_test();
 
 static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] =
     {

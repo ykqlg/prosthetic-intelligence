@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "*.cjson": "jsonc",
+        "*.wxss": "css",
+        "*.wxs": "javascript",
+        "stdio.h": "c",
+        "bmi088reg.h": "c",
+        "spi.h": "c",
+        "wiringpi.h": "c",
+        "bmi088middleware.h": "c",
+        "struct_typedef.h": "c",
+        "bmi088driver.h": "c",
+        "main.h": "c",
+        "stdlib.h": "c"
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
+}
