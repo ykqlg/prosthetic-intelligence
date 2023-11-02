@@ -56,17 +56,14 @@ void BMI088_read(fp32 accel[3])
     int16_t bmi088_raw_temp;
 
     BMI088_accel_read_muli_reg(BMI088_ACCEL_XOUT_L, buf, 7);
-
+    
     bmi088_raw_temp = (int16_t)((buf[2]) << 8) | buf[1];
     accel[0] = bmi088_raw_temp * BMI088_ACCEL_SEN;
     bmi088_raw_temp = (int16_t)((buf[4]) << 8) | buf[3];
     accel[1] = bmi088_raw_temp * BMI088_ACCEL_SEN;
     bmi088_raw_temp = (int16_t)((buf[6]) << 8) | buf[5];
     accel[2] = bmi088_raw_temp * BMI088_ACCEL_SEN;
-
 }
-
-
 
 
 // *******************************
@@ -185,3 +182,5 @@ void BMI088_accel_soft_reset(){
 void BMI088_accel_self_test(){
     self_test();
 }
+
+

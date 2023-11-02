@@ -54,22 +54,7 @@ typedef struct __SPI_HandleTypeDef{
 
 SPI_HandleTypeDef* BMI088_spi_init(int channel,int speed, int debug);
 
-// typedef __packed struct BMI088_RAW_DATA
-// {
-//     uint8_t status;
-//     int16_t accel[3];
-//     int16_t temp;
-//     int16_t gyro[3];
-// } bmi088_raw_data_t;
 
-// typedef struct BMI088_REAL_DATA
-// {
-//     uint8_t status;
-//     fp32 accel[3];
-//     fp32 temp;
-//     fp32 gyro[3];
-//     fp32 time;
-// } bmi088_real_data_t;
 
 enum
 {
@@ -92,13 +77,6 @@ enum
     BMI088_SELF_TEST_GYRO_ERROR = 0x40,
     BMI088_NO_SENSOR = 0xFF,
 };
-
-
-// extern uint8_t BMI088_init(void);
-// extern bool_t bmi088_accel_init(void);
-// extern bool_t bmi088_gyro_init(void);
-
-// extern void BMI088_read(fp32 gyro[3], fp32 accel[3], fp32 *temperate);
 
 void BMI088_accel_write_single_reg(uint8_t reg, uint8_t data);
 void BMI088_accel_read_single_reg(uint8_t reg, uint8_t* data);

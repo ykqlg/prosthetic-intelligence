@@ -4,6 +4,7 @@
 #include "struct_typedef.h"
 #include "BMI088reg.h"
 #include <wiringPi.h>
+#include <signal.h>
 #include "BMI088driver.h"
 
 #define CHANNEL_GYRO 0
@@ -12,10 +13,25 @@
 #define SPEED 500000
 #define BUF_MAX 1024
 
-SPI_HandleTypeDef* hspi_acc;
+SPI_HandleTypeDef* hspi_acc = NULL;
+FILE * file = NULL;
+void test(){
+  while(1){
+    int data = rand() % 100;
+    printf("%d\n", data);
+    usleep(10);  // 模拟传感器每秒产生一次数据
+  }
+}
+
+void signal_handler(int signum) {
+    if (file != NULL) {
+        fclose(file); // 关闭文件
+    }
+    exit(signum); // 退出程序
+}
 
 int main(void) {
-
+  signal(SIGINT, signal_handler);
   BMI088_init();
 
   // hspi_acc = BMI088_spi_init(CHANNEL_ACC, SPEED, DEBUG);
@@ -24,7 +40,6 @@ int main(void) {
   fp32 accel[3];
 
 
-  // ************************
 
   BMI088_accel_soft_reset();
 
@@ -40,35 +55,38 @@ int main(void) {
   
   BMI088_accel_self_test();
 
-  while(1){
-    uint8_t rxdata = 0;    
-    // BMI088_accel_read_single_reg(BMI088_ACC_PWR_CONF,&rxdata);
-
-    // BMI088_accel_write_single_reg(BMI088_ACCEL_XOUT_M,0x00);
-    // BMI088_accel_read_single_reg(BMI088_ACCEL_XOUT_M,&rxdata);
-    // uint8_t buf[8] = {0, 0, 0, 0, 0, 0,0,0};
-
-    // BMI088_accel_read_muli_reg(BMI088_ACCEL_XOUT_L, buf, 8);
-    // printf("received: %02x\n",rxdata);
-    
-    // BMI088_read(accel);
-    // printf("%f %f %f\n",accel[0],accel[1],accel[2]);
-    
-
-    // delay(50);
-
-
-    // 获取传感器数据，假设传感器数据存储在变量 sensor_data 中
-    int sensor_data = rand() % 100; // 这里使用随机数模拟传感器数据
-
-    // 将传感器数据通过标准输出打印出来
-    printf("%d\n", sensor_data);
-
-    // 每隔1秒更新一次数据
-    sleep(1);
+  file = fopen("data.csv", "w");
+  if (file == NULL) {
+    fprintf(stderr, "Error opening file.\n");
+    return 1;
   }
+
+  fprintf(file, "ACC_X,ACC_Y,ACC_Z\n"); 
+
+  int count = 300;
+
+  while(count--){
+    
+    BMI088_read(accel);
+    // printf("%f %f %f\n",accel[0],accel[1],accel[2]);
+    fprintf(file, "%f,%f,%f\n",accel[0],accel[1],accel[2]);
+
+    delay(50);
+
+  }
+  fclose(file);
+
+  printf("Successful end!!!\n");
+
+
+  // test();
   
+
   return 0;
 
-
 }
+
+// ***************************************************************
+
+
+
