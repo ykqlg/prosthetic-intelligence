@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -I/usr/lib/include -g
 LDFLAGS = -L/usr/lib -lwiringPi
 
-SRC = main.c BMI088driver.c
+SRC = main.c BMI088driver.c BMI088Middleware.c
 TARGET = main
 
 $(TARGET): $(SRC)

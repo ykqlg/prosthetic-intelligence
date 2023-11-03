@@ -55,7 +55,6 @@ typedef struct __SPI_HandleTypeDef{
 SPI_HandleTypeDef* BMI088_spi_init(int channel,int speed, int debug);
 
 
-
 enum
 {
     BMI088_NO_ERROR = 0x00,
@@ -83,24 +82,14 @@ void BMI088_accel_read_single_reg(uint8_t reg, uint8_t* data);
 void BMI088_accel_read_muli_reg(uint8_t reg, uint8_t *data, uint8_t len );
 // void BMI088_accel_write_muli_reg(uint8_t reg, uint8_t *data, uint8_t len );
 void BMI088_accel_soft_reset();
-void log_print(uint8_t *data, uint8_t len);
 void BMI088_accel_self_test();
 
-static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] =
-    {
-        {BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
-        {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR},
-        {BMI088_ACC_CONF,  BMI088_ACC_NORMAL| BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set, BMI088_ACC_CONF_ERROR},
-        {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
-        {BMI088_INT1_IO_CTRL, BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_LOW, BMI088_INT1_IO_CTRL_ERROR},
-        {BMI088_INT_MAP_DATA, BMI088_ACC_INT1_DRDY_INTERRUPT, BMI088_INT_MAP_DATA_ERROR}
 
-};
 
-// uint8_t BMI088_init(void);
-// bool_t bmi088_accel_init(void);
+uint8_t BMI088_init(void);
+
+bool_t bmi088_accel_init(void);
 // bool_t bmi088_gyro_init(void);
-void BMI088_init();
 void BMI088_read(fp32 accel[3]);
 
 

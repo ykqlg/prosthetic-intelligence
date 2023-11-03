@@ -1,5 +1,6 @@
 #include "BMI088driver.h"
 #include "BMI088reg.h"
+#include "BMI088Middleware.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <wiringPi.h>
@@ -17,38 +18,71 @@ void BMI088_accel_read_single_reg(uint8_t reg, uint8_t* data);
 void BMI088_accel_read_muli_reg(uint8_t reg, uint8_t *data, uint8_t len );
 // void BMI088_accel_write_muli_reg(uint8_t reg, uint8_t *data, uint8_t len );
 void BMI088_accel_soft_reset();
-void log_print(uint8_t *data, uint8_t len);
-void self_test();
 
 SPI_HandleTypeDef* BMI088_spi_init(int channel,int speed, int debug){
-  int fd = wiringPiSPISetup(channel,speed);
-  if (fd == -1) {
-    printf("SPI setup failed: Channel %d\n",channel);
-    return NULL;
-  }
-  SPI_HandleTypeDef* hspi = malloc(sizeof(SPI_HandleTypeDef));
-  hspi->wfd = fd;
-  hspi->rfd = channel;
-  hspi->debug = debug;
-
-  return hspi;
-}
-
-
-void log_print(uint8_t *data, uint8_t len){
-    printf("Received: ");
-    while(len--){
-        printf("%f ",data++);
+    int fd = wiringPiSPISetup(channel,speed);
+    if (fd == -1) {
+        printf("SPI setup failed: Channel %d\n",channel);
+        return NULL;
     }
-    printf("\n");
+    SPI_HandleTypeDef* hspi = (SPI_HandleTypeDef*)malloc(sizeof(SPI_HandleTypeDef));
+    hspi->wfd = fd;
+    hspi->rfd = channel;
+    hspi->debug = debug;
+
+    return hspi;
 }
-// **********************************
-void BMI088_init(){
-    if (wiringPiSetup() == -1) {
-      printf("wiringPi setup failed\n");
-      exit(1);
+
+static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] =
+    {
+        {BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
+        {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR},
+        {BMI088_ACC_CONF,  BMI088_ACC_NORMAL| BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set, BMI088_ACC_CONF_ERROR},
+        {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
+        {BMI088_INT1_IO_CTRL, BMI088_ACC_INT1_IO_ENABLE | BMI088_ACC_INT1_GPIO_PP | BMI088_ACC_INT1_GPIO_LOW, BMI088_INT1_IO_CTRL_ERROR},
+        {BMI088_INT_MAP_DATA, BMI088_ACC_INT1_DRDY_INTERRUPT, BMI088_INT_MAP_DATA_ERROR}
+
+};
+
+
+bool_t bmi088_accel_init(void)
+{
+    uint8_t res = 0;
+    uint8_t write_reg_num = 0;
+
+    BMI088_accel_soft_reset();
+
+    //check commiunication is normal after reset
+    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, &res);
+    BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
+    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, &res);
+    BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
+
+    //set accel sonsor config and check
+    for (write_reg_num = 0; write_reg_num < BMI088_WRITE_ACCEL_REG_NUM; write_reg_num++)
+    {
+        BMI088_accel_write_single_reg(write_BMI088_accel_reg_data_error[write_reg_num][0], write_BMI088_accel_reg_data_error[write_reg_num][1]);
+        BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
+
     }
+    return BMI088_NO_ERROR;
 }
+
+
+
+uint8_t BMI088_init(){
+    
+    uint8_t error = BMI088_NO_ERROR;
+    // GPIO and SPI  Init .
+    BMI088_GPIO_init();
+    BMI088_com_init();
+
+    error |= bmi088_accel_init();
+    // error |= bmi088_gyro_init();
+    return error;
+
+}
+
 
 void BMI088_read(fp32 accel[3])
 {
@@ -72,7 +106,7 @@ void self_test(){
     fp32 accel_neg[3];
 
     BMI088_accel_write_single_reg(BMI088_ACC_RANGE, BMI088_ACC_RANGE_24G);
-    BMI088_accel_write_single_reg(BMI088_ACC_CONF, BMI088_ACC_NORMAL<<BMI088_ACC_BWP_SHFITS | BMI088_ACC_1600_HZ);
+    BMI088_accel_write_single_reg(BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_1600_HZ);
     BMI088_accel_write_single_reg(BMI088_ACC_SELF_TEST, BMI088_ACC_SELF_TEST_POSITIVE_SIGNAL);
     BMI088_read(accel_pos);
     BMI088_accel_write_single_reg(BMI088_ACC_SELF_TEST, BMI088_ACC_SELF_TEST_NEGATIVE_SIGNAL);
@@ -86,6 +120,7 @@ void self_test(){
     }
     if(!(result[0]>=1000 && result[1]>=1000 && result[2]>=500)){
         printf("Self Test: Not satisfy the expected values!!! \n ");
+        exit(1);
     }
 
     if(hspi_acc->debug){
@@ -104,6 +139,7 @@ void soft_reset(SPI_HandleTypeDef* hspi){
     uint8_t data[] = {BMI088_ACC_SOFTRESET, BMI088_ACC_SOFTRESET_VALUE}; 
     wiringPiSPIDataRW(hspi->rfd,data,2);
     delay(1);
+
 }
 
 
@@ -164,6 +200,8 @@ void BMI088_write_muli_reg(SPI_HandleTypeDef* hspi, uint8_t reg, uint8_t* buf, u
 
 // ********** Accelemeter ******************
 void BMI088_accel_write_single_reg(uint8_t reg, uint8_t data){
+    uint8_t t;
+    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, &t);
     BMI088_write_single_reg(hspi_acc, reg, data);  
 }
 
