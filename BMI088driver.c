@@ -13,12 +13,6 @@ fp32 BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
 
 extern SPI_HandleTypeDef* hspi_acc;
 
-void BMI088_accel_write_single_reg(uint8_t reg, uint8_t data);
-void BMI088_accel_read_single_reg(uint8_t reg, uint8_t* data);
-void BMI088_accel_read_muli_reg(uint8_t reg, uint8_t *data, uint8_t len );
-// void BMI088_accel_write_muli_reg(uint8_t reg, uint8_t *data, uint8_t len );
-void BMI088_accel_soft_reset();
-
 SPI_HandleTypeDef* BMI088_spi_init(int channel,int speed, int debug){
     int fd = wiringPiSPISetup(channel,speed);
     if (fd == -1) {
@@ -44,7 +38,6 @@ static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] 
 
 };
 
-
 bool_t bmi088_accel_init(void)
 {
     uint8_t res = 0;
@@ -68,8 +61,6 @@ bool_t bmi088_accel_init(void)
     return BMI088_NO_ERROR;
 }
 
-
-
 uint8_t BMI088_init(){
     
     uint8_t error = BMI088_NO_ERROR;
@@ -78,11 +69,9 @@ uint8_t BMI088_init(){
     BMI088_com_init();
 
     error |= bmi088_accel_init();
-    // error |= bmi088_gyro_init();
     return error;
 
 }
-
 
 void BMI088_read(fp32 accel[3])
 {
@@ -92,58 +81,15 @@ void BMI088_read(fp32 accel[3])
     BMI088_accel_read_muli_reg(BMI088_ACCEL_XOUT_L, buf, 7);
     
     bmi088_raw_temp = (int16_t)((buf[2]) << 8) | buf[1];
-    accel[0] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+    accel[0] = (fp64)bmi088_raw_temp * BMI088_ACCEL_SEN;
     bmi088_raw_temp = (int16_t)((buf[4]) << 8) | buf[3];
-    accel[1] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+    accel[1] = (fp64)bmi088_raw_temp * BMI088_ACCEL_SEN;
     bmi088_raw_temp = (int16_t)((buf[6]) << 8) | buf[5];
-    accel[2] = bmi088_raw_temp * BMI088_ACCEL_SEN;
+    accel[2] = (fp64)bmi088_raw_temp * BMI088_ACCEL_SEN;
 }
 
 
-// *******************************
-void self_test(){
-    fp32 accel_pos[3];
-    fp32 accel_neg[3];
-
-    BMI088_accel_write_single_reg(BMI088_ACC_RANGE, BMI088_ACC_RANGE_24G);
-    BMI088_accel_write_single_reg(BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_1600_HZ);
-    BMI088_accel_write_single_reg(BMI088_ACC_SELF_TEST, BMI088_ACC_SELF_TEST_POSITIVE_SIGNAL);
-    BMI088_read(accel_pos);
-    BMI088_accel_write_single_reg(BMI088_ACC_SELF_TEST, BMI088_ACC_SELF_TEST_NEGATIVE_SIGNAL);
-    BMI088_read(accel_neg);
-    BMI088_accel_write_single_reg(BMI088_ACC_SELF_TEST, BMI088_ACC_SELF_TEST_OFF);
-
-    int len = 3;
-    fp32 result[len];
-    for(int i=0;i<len;i++){
-        result[i] = accel_pos[i] - accel_neg[i];
-    }
-    if(!(result[0]>=1000 && result[1]>=1000 && result[2]>=500)){
-        printf("Self Test: Not satisfy the expected values!!! \n ");
-        exit(1);
-    }
-
-    if(hspi_acc->debug){
-        printf("Received: ");
-        for(int i = 0; i < len; i++){
-            printf("%f ",result[i]);
-        }
-        printf("\n");
-    }
-    
-    
-
-}
-
-void soft_reset(SPI_HandleTypeDef* hspi){
-    uint8_t data[] = {BMI088_ACC_SOFTRESET, BMI088_ACC_SOFTRESET_VALUE}; 
-    wiringPiSPIDataRW(hspi->rfd,data,2);
-    delay(1);
-
-}
-
-
-// *********** BMI088 I/O *****************
+// *********** BMI088 general control *****************
 
 void BMI088_read_single_reg(SPI_HandleTypeDef* hspi, uint8_t reg, uint8_t *return_data)
 {
@@ -196,9 +142,49 @@ void BMI088_write_muli_reg(SPI_HandleTypeDef* hspi, uint8_t reg, uint8_t* buf, u
    }
 }
 
+void self_test(){
+    fp32 accel_pos[3];
+    fp32 accel_neg[3];
+
+    BMI088_accel_write_single_reg(BMI088_ACC_RANGE, BMI088_ACC_RANGE_24G);
+    BMI088_accel_write_single_reg(BMI088_ACC_CONF, BMI088_ACC_NORMAL | BMI088_ACC_1600_HZ);
+    BMI088_accel_write_single_reg(BMI088_ACC_SELF_TEST, BMI088_ACC_SELF_TEST_POSITIVE_SIGNAL);
+    BMI088_read(accel_pos);
+    BMI088_accel_write_single_reg(BMI088_ACC_SELF_TEST, BMI088_ACC_SELF_TEST_NEGATIVE_SIGNAL);
+    BMI088_read(accel_neg);
+    BMI088_accel_write_single_reg(BMI088_ACC_SELF_TEST, BMI088_ACC_SELF_TEST_OFF);
+
+    int len = 3;
+    fp32 result[len];
+    for(int i=0;i<len;i++){
+        result[i] = accel_pos[i] - accel_neg[i];
+    }
+    if(!(result[0]>=1000 && result[1]>=1000 && result[2]>=500)){
+        printf("Self Test: Not satisfy the expected values!!! \n ");
+        exit(1);
+    }
+
+    if(hspi_acc->debug){
+        printf("Received: ");
+        for(int i = 0; i < len; i++){
+            printf("%f ",result[i]);
+        }
+        printf("\n");
+    }
+    
+
+}
+
+void soft_reset(SPI_HandleTypeDef* hspi){
+    uint8_t data[] = {BMI088_ACC_SOFTRESET, BMI088_ACC_SOFTRESET_VALUE}; 
+    wiringPiSPIDataRW(hspi->rfd,data,2);
+    delay(1);
+
+}
 
 
-// ********** Accelemeter ******************
+
+// ********** Accelemeter access ******************
 void BMI088_accel_write_single_reg(uint8_t reg, uint8_t data){
     uint8_t t;
     BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, &t);

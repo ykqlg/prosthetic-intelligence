@@ -31,8 +31,8 @@ int main(void) {
 
 	BMI088_init();
 	
-	BMI088_accel_self_test();
-	
+	// BMI088_accel_self_test();
+
 
 	file = fopen("data.csv", "w");
 	if (file == NULL) {
@@ -51,6 +51,9 @@ int main(void) {
 		BMI088_read(accel);
 		printf("%f %f %f\n",accel[0],accel[1],accel[2]);
 		fprintf(file, "%f,%f,%f\n",accel[0],accel[1],accel[2]);
+		// uint8_t t;
+		// BMI088_accel_read_single_reg(BMI088_ACC_RANGE, &t);
+		// printf("%d\n",t);
 	}
 	fclose(file);
 
