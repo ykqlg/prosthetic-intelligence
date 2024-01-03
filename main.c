@@ -30,13 +30,14 @@ int main(void)
 	// 创建准备写入的文件
 	char filePath[50];
 	createFileNameWithTime(filePath);
+
 	file = fopen(filePath, "w");
 	if (file == NULL)
 	{
 		fprintf(stderr, "Error opening file.\n");
 		return 1;
 	}
-	fprintf(file, "ACC_X,ACC_Y,ACC_Z\n");
+	fprintf(file, "ACC_X,ACC_Y,ACC_Z,Time\n");
 
 	fp32 accel[3];
 	signal(SIGINT, signal_handler); // 使用 ctrl+C 终止
@@ -44,8 +45,9 @@ int main(void)
 	BMI088_init();
 
 	// BMI088_accel_self_test();
-
-	int count = 30000;
+	int count = 10000;
+	// int count = 1000;
+	printf("**********  Start  **********\n");
 
 	clock_t start_time = clock();
 
@@ -53,20 +55,21 @@ int main(void)
 	{
 
 		BMI088_read(accel);
-		printf("%f %f %f\n", accel[0], accel[1], accel[2]);
-		fprintf(file, "%f,%f,%f\n", accel[0], accel[1], accel[2]);
-		// uint8_t t;
-		// BMI088_accel_read_single_reg(BMI088_ACC_RANGE, &t);
-		// printf("%d\n",t);
-	}
-	fclose(file);
+		clock_t time = clock();
 
-	printf("Successful end!!!\n");
+		// printf("%f %f %f\n", accel[0], accel[1], accel[2]);
+		fprintf(file, "%f,%f,%f,%f\n", accel[0], accel[1], accel[2], ((double)(time - start_time)) / CLOCKS_PER_SEC);
+
+		// for (int i = 0; i < 140000; i++)
+		// 	;
+	}
 
 	clock_t end_time = clock();
 	double cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-	printf("程序执行时间为 %f 秒\n", cpu_time_used);
+	printf("==> Execution Time: %fs\n", cpu_time_used);
 
+	printf("**********  End  **********\n");
+	fclose(file);
 	return 0;
 }
 
@@ -86,4 +89,8 @@ void createFileNameWithTime(char *filePath)
 
 	// 构建文件路径
 	sprintf(filePath, "output/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
+
+	FILE *outputFile = fopen("targetFileName.txt", "w");
+	fprintf(outputFile, filePath);
+	fclose(outputFile);
 }

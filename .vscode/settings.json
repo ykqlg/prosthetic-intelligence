@@ -11,7 +11,8 @@
         "struct_typedef.h": "c",
         "bmi088driver.h": "c",
         "main.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "string.h": "c"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }
