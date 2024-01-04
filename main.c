@@ -45,9 +45,10 @@ int main(void)
 	BMI088_init();
 
 	// BMI088_accel_self_test();
-	int count = 10000;
+	int count = 7000;
 	// int count = 1000;
 	printf("**********  Start  **********\n");
+	printf("==> Current: %s\n", filePath);
 
 	clock_t start_time = clock();
 
@@ -60,8 +61,8 @@ int main(void)
 		// printf("%f %f %f\n", accel[0], accel[1], accel[2]);
 		fprintf(file, "%f,%f,%f,%f\n", accel[0], accel[1], accel[2], ((double)(time - start_time)) / CLOCKS_PER_SEC);
 
-		// for (int i = 0; i < 140000; i++)
-		// 	;
+		for (int i = 0; i < 140000; i++)
+			;
 	}
 
 	clock_t end_time = clock();

@@ -30,7 +30,7 @@ def plot_data(filename):
     ax.hist(np.diff(time), 1000)
     
     fs = 1/np.mean(np.diff(time));  # sample rate, Hz
-    print("采样率fs = %d" % fs)
+    # print("采样率fs = %d" % fs)
     
     
     # plt.specgram(ACC_Z, NFFT=1024, Fs=fs, detrend=None)
