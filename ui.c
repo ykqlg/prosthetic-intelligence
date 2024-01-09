@@ -51,6 +51,17 @@ void onOKClicked(GtkWidget *widget, gpointer data)
         FILE *labelFile = fopen("label_file.csv", "a");
         if (labelFile != NULL)
         {
+            // 检查文件是否为空
+            fseek(labelFile, 0, SEEK_END);
+            int isEmpty = ftell(labelFile) == 0;
+            fseek(labelFile, 0, SEEK_SET);
+
+            // 如果文件为空，写入列名
+            if (isEmpty)
+            {
+                fprintf(labelFile, "FilePath,Label\n");
+            }
+
             fprintf(labelFile, "%s,%s\n", dataFileName, text);
             fclose(labelFile);
         }
