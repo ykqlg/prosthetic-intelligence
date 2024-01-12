@@ -66,6 +66,7 @@ void onOKClicked(GtkWidget *widget, gpointer data)
             fclose(labelFile);
         }
     }
+    gtk_main_quit();
 }
 
 void onContinueClicked(GtkWidget *widget, gpointer data)
@@ -92,10 +93,26 @@ void onCancelClicked(GtkWidget *widget, gpointer data)
 {
     // 在这里处理点击"Cancel"按钮的逻辑
     gtk_main_quit();
+    if (remove(dataFileName) == 0)
+    {
+        printf("File %s deleted successfully.\n", dataFileName);
+    }
+    else
+    {
+        perror("Error deleting file");
+    }
 }
 
 void onRestartClicked(GtkWidget *widget, gpointer data)
 {
+    if (remove(dataFileName) == 0)
+    {
+        printf("File %s deleted successfully.\n", dataFileName);
+    }
+    else
+    {
+        perror("Error deleting file");
+    }
     // 关闭当前窗口
     GtkWidget *window = GTK_WIDGET(data);
     if (GTK_IS_WIDGET(window))
