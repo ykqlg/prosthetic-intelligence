@@ -89,7 +89,7 @@ void createFileNameWithTime(char *filePath)
 	strftime(timeString, sizeof(timeString), "%Y%m%d_%H%M%S", localTime);
 
 	// 构建文件路径
-	sprintf(filePath, "output/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
+	sprintf(filePath, "../output/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
 
 	FILE *outputFile = fopen("targetFileName.txt", "w");
 	fprintf(outputFile, filePath);
