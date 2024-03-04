@@ -41,6 +41,8 @@ class MyDataset:
             ACC_filtered_H = butter_highpass_filter(
                 ACC_filtered_L, cutoff=20, fs=fs, order=5)
             threshold = 1000
+            # threshold = 700
+            # peaks, _ = find_peaks(ACC, height=threshold)
             peaks, _ = find_peaks(ACC_filtered_H, height=threshold)
             pivot = peaks[0]
             start_index = pivot - int(forward*fs)
@@ -200,7 +202,7 @@ class MyMFCCExtractor:
 
 def main(random_state=43, grid_search=False):
     dataSet = MyDataset(label_file_path='label_file.csv',
-                        random_state=random_state, forward=0.5, backward=1, logger=logger)
+                        random_state=random_state, forward=0.5, backward=0.5, logger=logger)
 
     concat = True
     dynamic = False
@@ -210,7 +212,8 @@ def main(random_state=43, grid_search=False):
     X_train, y_train, X_test, y_test = dataSet.get_data()
     rate = dataSet.get_rate()
     # myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=12, nfilt=20, nfft=256,ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
-    myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=13, nfilt=26, nfft=512, ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
+    myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=13, nfilt=26, nfft=512,
+                    ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
 
     if grid_search:
         param_grid = {
@@ -294,21 +297,21 @@ def main(random_state=43, grid_search=False):
         acc = accuracy_score(y_test, y_pred)
         logger.info(f"Predict scores: {acc}")
 
-        return
+        return acc
 
 
 if __name__ == "__main__":
 
-    # random_numbers = generate_random_integers(10, 1, 100)
-    # acc_list = []
-    # for i,random_num in enumerate(random_numbers):
-    #     logger.debug(f"=====> Epoch {i}")
-    #     acc = main(random_state=random_num)
-    #     acc_list.append(acc)
+    random_numbers = generate_random_integers(10, 1, 100)
+    acc_list = []
+    for i,random_num in enumerate(random_numbers):
+        logger.debug(f"=====> Epoch {i}")
+        acc = main(random_state=random_num)
+        acc_list.append(acc)
 
-    # acc_array = np.array(acc_list)
-    # logger.info("Predict Scores: {}".format([round(score, 4) for score in acc_array]))
-    # logger.info("Average Predict Scores: {:.4f}".format(acc_array.mean()))
+    acc_array = np.array(acc_list)
+    logger.info("Predict Scores: {}".format([round(score, 4) for score in acc_array]))
+    logger.info("Average Predict Scores: {:.4f}".format(acc_array.mean()))
 
     # main(grid_search=True)
-    main()
+    # main()
