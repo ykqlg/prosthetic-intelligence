@@ -92,6 +92,11 @@ void createFileNameWithTime(char *filePath)
 	sprintf(filePath, "../output/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
 
 	FILE *outputFile = fopen("targetFileName.txt", "w");
+	if (outputFile == NULL)
+	{
+		fprintf(stderr, "targetFileName: Error opening file.\n");
+		return;
+	}
 	fprintf(outputFile, filePath);
 	fclose(outputFile);
 }

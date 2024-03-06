@@ -5,6 +5,28 @@ import glob
 import numpy as np
 
 import scipy.signal as signal
+
+
+def butter_lowpass(cutoff, fs, order=5):
+    return signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
+
+def butter_lowpass_filter(data, cutoff, fs, order=5):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = signal.lfilter(b, a, data)
+    return y
+
+def butter_highpass(cutoff, fs, order=5):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
+    return b, a
+
+def butter_highpass_filter(data, cutoff, fs, order=5):
+    b, a = butter_highpass(cutoff, fs, order=order)
+    y = signal.filtfilt(b, a, data)
+    return y
+
+
 def get_latest_file(folder_path):
     # 使用 glob 模块获取文件夹中所有文件的路径列表
     files = glob.glob(os.path.join(folder_path, '*'))
@@ -26,19 +48,14 @@ def plot_data(filename):
     ACC_Z = df['ACC_Z']
     time = df['Time']
     
-    _,ax = plt.subplots(1, 1, figsize=(20, 4)) 
-    ax.hist(np.diff(time), 1000)
     
-    fs = 1/np.mean(np.diff(time));  # sample rate, Hz
-    # print("采样率fs = %d" % fs)
-    
-    
-    # plt.specgram(ACC_Z, NFFT=1024, Fs=fs, detrend=None)
-    
+    fs = 1330
+    # fs = 1/np.mean(np.diff(time))
+
     # Filter requirements.
     order = 6
     cutoff = 500  # desired cutoff frequency of the filter, Hz
-
+    truncate_length = 0
     
     # Filter the data, and plot both the original and filtered signals.
     ACC_X_filtered = butter_lowpass_filter(ACC_X, cutoff, fs, order)
@@ -56,12 +73,12 @@ def plot_data(filename):
     for axe in axes:
         if ylim :axe.set_ylim(-irange, irange)
         axe.set_ylabel('mg')
+    
         
-        
-    ACC_X_filtered = butter_highpass_filter(ACC_X_filtered, 20, fs, order=5)[1000:]
-    ACC_Y_filtered = butter_highpass_filter(ACC_Y_filtered, 20, fs, order=5)[1000:]
-    ACC_Z_filtered = butter_highpass_filter(ACC_Z_filtered, 20, fs, order=5)[1000:]
-    time = time[1000:]
+    ACC_X_filtered = butter_highpass_filter(ACC_X_filtered, 20, fs, order=5)[truncate_length:]
+    ACC_Y_filtered = butter_highpass_filter(ACC_Y_filtered, 20, fs, order=5)[truncate_length:]
+    ACC_Z_filtered = butter_highpass_filter(ACC_Z_filtered, 20, fs, order=5)[truncate_length:]
+    time = time[truncate_length:]
     axes[0].plot(time,ACC_X_filtered)
     axes[1].plot(time,ACC_Y_filtered)
     axes[2].plot(time,ACC_Z_filtered)
@@ -71,30 +88,14 @@ def plot_data(filename):
     plt.tight_layout()
     plt.savefig("visualization.png")
     # plt.show()
+
     
-def butter_lowpass(cutoff, fs, order=5):
-    return signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
 
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_lowpass(cutoff, fs, order=order)
-    y = signal.lfilter(b, a, data)
-    return y
-
-def butter_highpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
-    return b, a
-
-def butter_highpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_highpass(cutoff, fs, order=order)
-    y = signal.filtfilt(b, a, data)
-    return y
 
 if __name__ == "__main__":
    
-    folder_path = './output'
+    folder_path = '../output'
     latest_file = get_latest_file(folder_path)
 
-    # print('latest_file',latest_file)
+    # print('latest_file:',latest_file)
     plot_data(latest_file)

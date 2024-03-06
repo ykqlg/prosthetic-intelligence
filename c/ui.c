@@ -48,7 +48,7 @@ void onOKClicked(GtkWidget *widget, gpointer data)
     if (strcmp(text, "0") == 0 || strcmp(text, "1") == 0)
     {
         // 打开附加标签文件，追加文件名和标签信息
-        FILE *labelFile = fopen("label_file.csv", "a");
+        FILE *labelFile = fopen("../label_file.csv", "a");
         if (labelFile != NULL)
         {
             // 检查文件是否为空

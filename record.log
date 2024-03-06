@@ -11632,3 +11632,65 @@ weighted avg     0.9278    0.9167    0.9155        24
 2024-03-04 09:22:59,102 - main - INFO - Predict scores: 0.9166666666666666
 2024-03-04 09:22:59,103 - main - INFO - Predict Scores: [0.8333, 0.9583, 0.875, 0.9583, 0.8333, 0.9583, 0.9583, 0.9583, 0.875, 0.9167]
 2024-03-04 09:22:59,103 - main - INFO - Average Predict Scores: 0.9125
+2024-03-06 16:07:33,376 - main - DEBUG - =====> Epoch 0
+2024-03-06 16:07:33,377 - main - DEBUG - ======> MyDataset parameters: 
+2024-03-06 16:07:33,377 - main - DEBUG - test_size: 0.2
+2024-03-06 16:07:33,378 - main - DEBUG - random_state: 49
+2024-03-06 16:07:33,378 - main - DEBUG - forward: 0.5
+2024-03-06 16:07:33,378 - main - DEBUG - backward: 0.5
+2024-03-06 16:11:20,928 - main - DEBUG - =====> Epoch 0
+2024-03-06 16:11:20,928 - main - DEBUG - ======> MyDataset parameters: 
+2024-03-06 16:11:20,928 - main - DEBUG - test_size: 0.2
+2024-03-06 16:11:20,929 - main - DEBUG - random_state: 49
+2024-03-06 16:11:20,929 - main - DEBUG - forward: 0.5
+2024-03-06 16:11:20,929 - main - DEBUG - backward: 0.5
+2024-03-06 16:27:48,873 - main - DEBUG - =====> Epoch 0
+2024-03-06 16:27:48,874 - main - DEBUG - ======> MyDataset parameters: 
+2024-03-06 16:27:48,874 - main - DEBUG - test_size: 0.2
+2024-03-06 16:27:48,875 - main - DEBUG - random_state: 49
+2024-03-06 16:27:48,875 - main - DEBUG - forward: 0.5
+2024-03-06 16:27:48,875 - main - DEBUG - backward: 0.5
+2024-03-06 16:28:53,252 - main - DEBUG - =====> Epoch 0
+2024-03-06 16:28:53,253 - main - DEBUG - ======> MyDataset parameters: 
+2024-03-06 16:28:53,253 - main - DEBUG - test_size: 0.2
+2024-03-06 16:28:53,253 - main - DEBUG - random_state: 49
+2024-03-06 16:28:53,253 - main - DEBUG - forward: 0.5
+2024-03-06 16:28:53,253 - main - DEBUG - backward: 0.5
+2024-03-06 16:29:01,010 - main - DEBUG - =======> MFCC parameters: 
+2024-03-06 16:29:01,011 - main - DEBUG - sample_rate: 1330
+2024-03-06 16:29:01,011 - main - DEBUG - winstep: 0.01
+2024-03-06 16:29:01,011 - main - DEBUG - numcep: 13
+2024-03-06 16:29:01,011 - main - DEBUG - nfilt: 26
+2024-03-06 16:29:01,012 - main - DEBUG - nfft: 512
+2024-03-06 16:29:01,012 - main - DEBUG - ceplifter: 22
+2024-03-06 16:29:01,012 - main - DEBUG - concat: True
+2024-03-06 16:29:01,012 - main - DEBUG - dynamic: False
+2024-03-06 16:29:16,811 - main - INFO - CV Scores: [0.9107, 0.9273, 0.9455, 0.8909, 0.9091]
+2024-03-06 16:29:16,812 - main - INFO - Average CV Scores: 0.9167
+2024-03-06 16:29:26,845 - main - DEBUG - Validation Classification Report:
+              precision    recall  f1-score   support
+
+           0     0.9683    0.8652    0.9139       141
+           1     0.8733    0.9704    0.9193       135
+
+    accuracy                         0.9167       276
+   macro avg     0.9208    0.9178    0.9166       276
+weighted avg     0.9218    0.9167    0.9165       276
+
+2024-03-06 16:29:31,555 - main - DEBUG - Predict Classification Report:
+              precision    recall  f1-score   support
+
+           0     0.9677    0.8824    0.9231        34
+           1     0.8974    0.9722    0.9333        36
+
+    accuracy                         0.9286        70
+   macro avg     0.9326    0.9273    0.9282        70
+weighted avg     0.9316    0.9286    0.9284        70
+
+2024-03-06 16:29:33,575 - main - INFO - Predict scores: 0.9285714285714286
+2024-03-06 16:29:33,580 - main - DEBUG - =====> Epoch 1
+2024-03-06 16:29:33,581 - main - DEBUG - ======> MyDataset parameters: 
+2024-03-06 16:29:33,581 - main - DEBUG - test_size: 0.2
+2024-03-06 16:29:33,581 - main - DEBUG - random_state: 43
+2024-03-06 16:29:33,581 - main - DEBUG - forward: 0.5
+2024-03-06 16:29:33,582 - main - DEBUG - backward: 0.5
