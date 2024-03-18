@@ -1,9 +1,7 @@
-import scipy.signal as signal
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import numpy as np
 import random
-import logging
 import matplotlib
 
 from sklearn.metrics import roc_curve, auc, confusion_matrix
@@ -12,16 +10,6 @@ import seaborn as sns
 
 # matplotlib.getLogger().setLevel(logging.WARNING)
 matplotlib.pyplot.set_loglevel (level = 'warning')
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    
-    b, a = signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
-    y = signal.lfilter(b, a, data)
-    return y
-
-def butter_highpass_filter(data, cutoff, fs, order=5):
-    b, a = signal.butter(order, cutoff,fs=fs, btype='high', analog=False)
-    y = signal.filtfilt(b, a, data)
-    return y
 
 
 def plot_embedding(feat, label, projection='2d'):
@@ -51,6 +39,7 @@ def plot_embedding(feat, label, projection='2d'):
         plt.show()
         
 def generate_random_integers(count, min_value=1, max_value=100,seed=41):
+    print(f"generate_random_int:{seed}")
     random.seed(seed)
     if count <= 0:
         raise ValueError("生成数量必须是正整数")

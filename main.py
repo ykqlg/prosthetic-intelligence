@@ -1,211 +1,32 @@
 import numpy as np
 import pandas as pd
+import time
 
-from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict, GridSearchCV
+from sklearn.model_selection import cross_val_score, cross_val_predict, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 
-from python_speech_features import mfcc
-from python_speech_features import delta
+
 import logging
 import logging.config
 
 from logging_config import logger
-from util import butter_lowpass_filter, butter_highpass_filter, generate_random_integers, plot_embedding, visualize_evaluation
-from scipy.signal import find_peaks
+from util import generate_random_integers, plot_embedding, visualize_evaluation
 
 
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import FunctionTransformer
 from itertools import product
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+from dataset import MyDataset
+from mfcc import MyMFCC
 
-
-class MyDataset:
-    def __init__(self, label_file_path, test_size=0.2, random_state=42, fs=1330, forward=0.5, backward=1.5, logger=None):
-        self.logger = logger or logging.getLogger(__name__)
-
-        # 打印参数信息
-        params = {'test_size': test_size, 'random_state': random_state,
-                  'forward': forward, 'backward': backward}
-        self._print_params(params)
-
-        labels_df = pd.read_csv(label_file_path)
-        filePaths = labels_df['FilePath'].values
-        data_list = []
-        for file_path in filePaths:
-            df = pd.read_csv(file_path)
-            ACC = df['ACC_Z']
-            ACC_filtered_L = butter_lowpass_filter(
-                ACC, cutoff=500, fs=fs, order=6)
-            ACC_filtered_H = butter_highpass_filter(
-                ACC_filtered_L, cutoff=20, fs=fs, order=5)
-            threshold = 1000
-            # threshold = 700
-            # peaks, _ = find_peaks(ACC, height=threshold)
-            peaks, _ = find_peaks(ACC_filtered_H, height=threshold)
-            pivot = peaks[0]
-            start_index = pivot - int(forward*fs)
-            end_index = pivot + int(backward*fs)
-
-            data_df = df[start_index:end_index + 1]
-
-            sig_X = data_df['ACC_X'].values
-            sig_Y = data_df['ACC_Y'].values
-            sig_Z = data_df['ACC_Z'].values
-            # rate = int(1/np.mean(np.diff(t)))
-            data = [sig_X, sig_Y, sig_Z]
-            data_list.append(data)
-
-        X = np.array(data_list)
-        y = labels_df['Label'].values
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=random_state)
-
-        self.rate = fs
-        self.X_train = X_train
-        self.y_train = y_train
-        self.X_test = X_test
-        self.y_test = y_test
-
-    def get_rate(self):
-        return self.rate
-
-    def get_data(self):
-        return self.X_train, self.y_train, self.X_test, self.y_test
-
-    def _print_params(self, params):
-        self.logger.debug("======> MyDataset parameters: ")
-        for param, value in params.items():
-            self.logger.debug(f"{param}: {value}")
-
-
-class MyMFCC:
-    def __init__(self, rate, winstep=0.01, numcep=13, nfilt=26, nfft=512, ceplifter=22,
-                 concat=False, dynamic=True, logger=None) -> None:
-
-        self.logger = logger or logging.getLogger(__name__)
-
-        # 打印参数信息
-        params = {'sample_rate': rate, 'winstep': winstep, 'numcep': numcep,
-                  'nfilt': nfilt, 'nfft': nfft, 'ceplifter': ceplifter, 'concat': concat, 'dynamic': dynamic}
-        self._print_params(params)
-
-        self.rate = rate
-        self.winstep = winstep
-        self.numcep = numcep
-        self.nfilt = nfilt
-        self.nfft = nfft
-        self.ceplifter = ceplifter
-        self.concat = concat
-        self.dynamic = dynamic
-
-    def _print_params(self, params):
-        self.logger.debug("=======> MFCC parameters: ")
-
-        # 循环打印参数
-        for param, value in params.items():
-            self.logger.debug(f"{param}: {value}")
-
-    def get_feat(self, dataSet):
-        # return self.get_add_feat(dataSet)
-        return self.get_concat_feat(dataSet)
-
-    def get_concat_feat(self, dataSet):
-        concat = self.concat
-        dynamic = self.dynamic
-
-        feat_list = []
-
-        for i in range(dataSet.shape[0]):
-            mfcc_feats = []
-
-            for axis in range(3):
-                signal = dataSet[i, axis]
-                mfcc_feat = mfcc(signal, self.rate, winstep=self.winstep, numcep=self.numcep,
-                                 nfilt=self.nfilt, nfft=self.nfft, ceplifter=self.ceplifter).reshape(-1)
-                mfcc_feats.append(mfcc_feat)
-
-            # 将 XYZ 轴的 MFCC 特征连接在一起
-            concatenated_feats = np.concatenate(mfcc_feats)
-            feat_list.append(concatenated_feats)
-
-        feat = np.array(feat_list)
-        num_features = feat.shape[1]
-
-        feat_dy = None
-        if dynamic:
-            num_features = int(feat.shape[1]/3)
-            feat_dymatic = []
-            for start_idx in range(0, feat.shape[1], num_features):
-                end_idx = start_idx + num_features
-                axis_features = feat[:, start_idx:end_idx]
-                delta_features = delta(axis_features, 2)
-                delta_delta_features = delta(delta_features, 2)
-                axis_features = np.hstack(
-                    (axis_features, delta_features, delta_delta_features))
-                feat_dymatic.append(axis_features)
-
-            feat_dy = np.concatenate(feat_dymatic, axis=1)
-
-        if concat:
-            if dynamic:
-                return feat_dy
-            else:
-                return feat
-
-        else:
-            if dynamic:
-                return feat_dy[:, :num_features]
-            else:
-                return feat[:, :num_features]
-
-    def get_add_feat(self, dataSet):
-        dynamic = self.dynamic
-
-        feat_list = []
-
-        for i in range(dataSet.shape[0]):
-
-            x, y, z = dataSet[i]
-            signal = x + y + z
-            mfcc_feat = mfcc(signal, self.rate, winstep=self.winstep, numcep=self.numcep,
-                             nfilt=self.nfilt, nfft=self.nfft, ceplifter=self.ceplifter).reshape(-1)
-            feat_list.append(mfcc_feat)
-
-        feat = np.array(feat_list)
-
-        if dynamic:
-            delta_features = delta(feat, 2)
-            delta_delta_features = delta(delta_features, 2)
-            feat = np.hstack((feat, delta_features, delta_delta_features))
-
-        return feat
-
-
-def predict_report(y_test, y_pred, logger):
-    cm = confusion_matrix(y_test, y_pred)
-
-    logger.debug(
-        f"Predict Classification Report:\n{classification_report(y_test, y_pred, digits=4)}")
-    logger.debug(f"Confusion Matrix:\n{cm}")
-
-
-class MyMFCCExtractor:
-    def __init__(self, myMFCC_instance):
-        self.myMFCC_instance = myMFCC_instance
-
-    def transform(self, X):
-        return self.myMFCC_instance.get_feat(X)
-
-
-def main(random_state=43, grid_search=False):
+def main(random_state=42, grid_search=False):
+    main_start_time = time.time()
     dataSet = MyDataset(label_file_path='label_file.csv',
-                        random_state=random_state, forward=0.5, backward=0.5, logger=logger)
+                        random_state=random_state, forward=0.5, backward=0.8, logger=logger)
 
-    concat = True
-    dynamic = False
+    concat = True # 改成false会掉两个点，从0.97到0.95
+    dynamic = False # 这个会导致特征提取时间增加非常多，原先run一次5s，变成一次120s
 
     model = SVC(kernel='linear', probability=True, C=0.1)
 
@@ -214,7 +35,7 @@ def main(random_state=43, grid_search=False):
     # myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=12, nfilt=20, nfft=256,ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
     myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=13, nfilt=26, nfft=512,
                     ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
-
+    
     if grid_search:
         param_grid = {
             'mfcc__winstep': [0.01],
@@ -262,14 +83,10 @@ def main(random_state=43, grid_search=False):
         X_train_feat = myMFCC.get_feat(X_train)
 
         cross_val_scores = cross_val_score(model, X_train_feat, y_train, cv=5)
-        logger.info("CV Scores: {}".format(
-            [round(score, 4) for score in cross_val_scores]))
-        logger.info("Average CV Scores: {:.4f}".format(
-            cross_val_scores.mean()))
+        # logger.info("CV Scores: {}".format([round(score, 4) for score in cross_val_scores]))
+        logger.info("5-Fold CV: {:.4f}".format(cross_val_scores.mean()))
 
-        y_cv_pred = cross_val_predict(model, X_train_feat, y_train, cv=5)
-        logger.debug(
-            f"Validation Classification Report:\n{classification_report(y_train, y_cv_pred, digits=4)}")
+
 
         model.fit(X_train_feat, y_train)
 
@@ -277,41 +94,173 @@ def main(random_state=43, grid_search=False):
         X_test_feat = myMFCC.get_feat(X_test)
         y_pred = model.predict(X_test_feat)
         y_prob = model.predict_proba(X_test_feat)[:, 1]
-        report = classification_report(
-            y_test, y_pred, digits=2, output_dict=True)
-        report_df = pd.DataFrame(report).transpose()
-        report_df = report_df.round(2)
-        report_df.to_csv('predict_report.csv')
-        logger.debug(
-            f"Predict Classification Report:\n{classification_report(y_test, y_pred, digits=4)}")
+        
+        # report = classification_report(
+        #     y_test, y_pred, digits=2, output_dict=True)
+        # report_df = pd.DataFrame(report).transpose()
+        # report_df = report_df.round(2)
+        # report_df.to_csv('predict_report.csv')
+        # logger.debug(
+        #     f"Predict Classification Report:\n{classification_report(y_test, y_pred, digits=4)}")
 
         # Example usage:
-        visualize_evaluation(y_test, y_prob, y_pred, save_dir='./img')
+        # visualize_evaluation(y_test, y_prob, y_pred, save_dir='./img')
 
         # feature visualization
-        # X_feat = np.concatenate((X_train_feat,X_test_feat),axis=0)
-        # labels = np.concatenate((y_train,y_test),axis=0)
-        # plot_embedding(X_feat,labels,'2d')
+        X_feat = np.concatenate((X_train_feat,X_test_feat),axis=0)
+        labels = np.concatenate((y_train,y_test),axis=0)
+        plot_embedding(X_feat,labels,'2d')
         # plot_embedding(X_feat,labels,'3d')
 
+        
+        main_end_time = time.time()
+        main_time = main_end_time - main_start_time
         acc = accuracy_score(y_test, y_pred)
-        logger.info(f"Predict scores: {acc}")
+        logger.info(f"Test acc: {acc:.4f}")
+        logger.info(f"Time: {main_time:.4f}")
+        
 
         return acc
+    
 
+def time_test_main(random_state=42, grid_search=False):
+    # backward_values = np.arange(0.5,1.5,step=0.1)
+    backward_values = np.linspace(0.5, 1.0, num=6, endpoint=True)
+    backward_values = [0.6, 0.7, 0.73, 0.76, 0.8,0.9]
+    # backward_values_arange = np.arange(0.5, 1.51, 0.1)
+    print(f"backward_values: {backward_values}")
 
+    times = []
+    accuracies = []
+    
+    # seed=43 是平的，42会掉
+    seed = 42
+    random_numbers = generate_random_integers(5, 1, 100,seed=seed)
+    print(f"random_seed: {seed}")
+    for backward_value in backward_values:
+  
+        acc_list = []
+        time_list = []
+        for i,random_num in enumerate(random_numbers):
+            dataSet = MyDataset(label_file_path='label_file.csv',
+                            random_state=random_num, forward=0.5, backward=backward_value, logger=logger)
+
+            concat = False
+            dynamic = False
+
+            model = SVC(kernel='linear', probability=True, C=0.1)
+            
+
+            X_train, y_train, X_test, y_test = dataSet.get_data()
+            rate = dataSet.get_rate()
+            # myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=12, nfilt=20, nfft=256,ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
+            myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=13, nfilt=26, nfft=512,
+                            ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
+
+            
+            X_train_feat = myMFCC.get_feat(X_train)
+            model.fit(X_train_feat, y_train)
+            
+
+            # predict
+            test_len = X_test.shape[0]
+            
+            start_time = time.time()
+            
+            X_test_feat = myMFCC.get_feat(X_test)
+            y_pred = model.predict(X_test_feat)
+            acc = accuracy_score(y_test, y_pred)
+            
+            end_time = time.time()
+            one_sample_time = (end_time - start_time)/test_len
+            time_list.append(one_sample_time)
+            acc_list.append(acc)
+            
+        accuracies.append(np.mean(acc_list))
+        times.append(np.mean(time_list))
+
+        
+        print(f'backward: {backward_value}')
+
+    fig, ax1 = plt.subplots()
+
+    color = 'tab:blue'
+    ax1.set_xlabel('Backward Values')
+    ax1.set_ylabel('Accuracy', color=color)
+    ax1.plot(backward_values, accuracies, marker='s', color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+    
+    
+    # color = 'tab:red'
+    # ax2 = ax1.twinx()
+    # ax2.set_ylabel('Average Time (seconds)', color=color)
+    # ax2.plot(backward_values, times, marker='o', color=color)
+    # ax2.tick_params(axis='y', labelcolor=color)
+    
+
+    fig.tight_layout()
+    plt.title('Process Time and Accuracy with different backward values', pad=20)  # 通过 pad 参数调整标题与图的距离
+    plt.subplots_adjust(top=0.85)  # 调整整个图形的顶部位置
+    # plt.title('Process Time and Accuracy with different backward values')
+    plt.savefig('./img/backward_accuracy&time.png')
+    plt.show()
+
+    return
+    
+    
+def svm_gridsearch(random_state=42, grid_search=False):
+    dataSet = MyDataset(label_file_path='label_file.csv',
+                        random_state=random_state, forward=0.5, backward=0.7, logger=logger)
+
+    concat = True
+    dynamic = False
+
+    svm_model = SVC(kernel='linear', probability=True, C=0.1)
+
+    X_train, y_train, X_test, y_test = dataSet.get_data()
+    rate = dataSet.get_rate()
+    # myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=12, nfilt=20, nfft=256,ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
+    myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=13, nfilt=26, nfft=512,
+                    ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
+    param_grid = {'C': [0.1, 1, 10, 100],
+              'gamma': [0.01, 0.1, 1, 10],
+              'kernel': ['linear', 'rbf', 'poly']}
+    X_train_feat = myMFCC.get_feat(X_train)
+
+    grid_search = GridSearchCV(svm_model, param_grid, cv=5, scoring='accuracy')
+    grid_search.fit(X_train_feat, y_train)
+    
+    print("最优参数：", grid_search.best_params_)
+
+    # 在验证集上评估性能
+    best_model = grid_search.best_estimator_
+
+    X_test_feat = myMFCC.get_feat(X_test)
+    y_pred = best_model.predict(X_test_feat)
+    y_prob = best_model.predict_proba(X_test_feat)[:, 1]
+
+    acc = accuracy_score(y_test, y_pred)
+    logger.info(f"Predict scores: {acc}")
+
+    return acc
+    
+    
 if __name__ == "__main__":
 
-    random_numbers = generate_random_integers(10, 1, 100)
-    acc_list = []
-    for i,random_num in enumerate(random_numbers):
-        logger.debug(f"=====> Epoch {i}")
-        acc = main(random_state=random_num)
-        acc_list.append(acc)
+    # random_numbers = generate_random_integers(5, 1, 100)
+  
+    # acc_list = []
+    # for i,random_num in enumerate(random_numbers):
+    #     logger.info(f"=> Exp {i+1}")
+    #     acc = main(random_state=random_num)
+    #     acc_list.append(acc)
 
-    acc_array = np.array(acc_list)
-    logger.info("Predict Scores: {}".format([round(score, 4) for score in acc_array]))
-    logger.info("Average Predict Scores: {:.4f}".format(acc_array.mean()))
+    # acc_array = np.array(acc_list)
+    # logger.info("\n")
+    # logger.info("Average Test Acc: {:.4f}".format(acc_array.mean()))
 
     # main(grid_search=True)
-    # main()
+    main()
+    # svm_gridsearch()
+
+    # time_test_main()
