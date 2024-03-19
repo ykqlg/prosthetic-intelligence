@@ -125,63 +125,70 @@ def main(random_state=42, grid_search=False):
 
 def time_test_main(random_state=42, grid_search=False):
     # backward_values = np.arange(0.5,1.5,step=0.1)
-    backward_values = np.linspace(0.5, 1.0, num=6, endpoint=True)
-    backward_values = [0.6, 0.7, 0.73, 0.76, 0.8,0.9]
+    # backward_values = np.linspace(0.3, 1.2, num=10, endpoint=True)
+    # backward_values = [0.6,0.65, 0.7, 0.725, 0.75, 0.775, 0.8,0.9]
+    backward_values = [0.6,0.7, 0.73, 0.76,0.8,0.9]
     # backward_values_arange = np.arange(0.5, 1.51, 0.1)
-    print(f"backward_values: {backward_values}")
+    logger.info(f"backward_values: {backward_values}")
 
     times = []
     accuracies = []
     
-    # seed=43 是平的，42会掉
-    seed = 42
+    seed = 43
     random_numbers = generate_random_integers(5, 1, 100,seed=seed)
-    print(f"random_seed: {seed}")
-    for backward_value in backward_values:
-  
-        acc_list = []
-        time_list = []
-        for i,random_num in enumerate(random_numbers):
-            dataSet = MyDataset(label_file_path='label_file.csv',
-                            random_state=random_num, forward=0.5, backward=backward_value, logger=logger)
+    logger.info(f"random_seed: {seed}")
+    logger.info(f"random_numbers:{random_numbers}")
+    # pbar = tqdm(backward_values,leave=True)
+    with tqdm(total=len(backward_values), desc='Backward Loop') as pbar:
+        for backward_value in backward_values:
+            pbar.set_description('Backward Loop: '+str(backward_value))
+            acc_list = []
+            time_list = []
+            for random_num in random_numbers:
+                dataSet = MyDataset(label_file_path='label_file.csv',
+                                random_state=random_num, forward=0.5, backward=backward_value, logger=logger)
 
-            concat = False
-            dynamic = False
+                concat = False
+                dynamic = False
 
-            model = SVC(kernel='linear', probability=True, C=0.1)
-            
+                model = SVC(kernel='linear', probability=True, C=0.1)
+                
 
-            X_train, y_train, X_test, y_test = dataSet.get_data()
-            rate = dataSet.get_rate()
-            # myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=12, nfilt=20, nfft=256,ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
-            myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=13, nfilt=26, nfft=512,
-                            ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
+                X_train, y_train, X_test, y_test = dataSet.get_data()
+                rate = dataSet.get_rate()
+                # myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=12, nfilt=20, nfft=256,ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
+                myMFCC = MyMFCC(rate=rate, winstep=0.01, numcep=13, nfilt=26, nfft=512,
+                                ceplifter=22, concat=concat, dynamic=dynamic, logger=logger)
 
-            
-            X_train_feat = myMFCC.get_feat(X_train)
-            model.fit(X_train_feat, y_train)
-            
+                
+                X_train_feat = myMFCC.get_feat(X_train)
+                model.fit(X_train_feat, y_train)
+                
 
-            # predict
-            test_len = X_test.shape[0]
-            
-            start_time = time.time()
-            
-            X_test_feat = myMFCC.get_feat(X_test)
-            y_pred = model.predict(X_test_feat)
-            acc = accuracy_score(y_test, y_pred)
-            
-            end_time = time.time()
-            one_sample_time = (end_time - start_time)/test_len
-            time_list.append(one_sample_time)
-            acc_list.append(acc)
-            
-        accuracies.append(np.mean(acc_list))
-        times.append(np.mean(time_list))
+                # predict
+                test_len = X_test.shape[0]
+                
+                start_time = time.time()
+                
+                X_test_feat = myMFCC.get_feat(X_test)
+                y_pred = model.predict(X_test_feat)
+                acc = accuracy_score(y_test, y_pred)
+                
+                end_time = time.time()
+                one_sample_time = (end_time - start_time)/test_len
+                time_list.append(one_sample_time)
+                acc_list.append(round(acc,4))
+                
+            mean_acc= np.mean(acc_list)
+            mean_time = np.mean(time_list)
+            accuracies.append(mean_acc)
+            times.append(mean_time)
+            pbar.update(1)
+            pbar.set_postfix(accuracy=f'{mean_acc:.4f}')
 
         
-        print(f'backward: {backward_value}')
-
+        # print(f'backward: {backward_value}')
+    logger.info(f"accuracies: {accuracies}")
     fig, ax1 = plt.subplots()
 
     color = 'tab:blue'
@@ -260,7 +267,7 @@ if __name__ == "__main__":
     # logger.info("Average Test Acc: {:.4f}".format(acc_array.mean()))
 
     # main(grid_search=True)
-    main()
+    # main()
     # svm_gridsearch()
 
-    # time_test_main()
+    time_test_main()

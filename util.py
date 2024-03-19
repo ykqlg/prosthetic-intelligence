@@ -39,7 +39,7 @@ def plot_embedding(feat, label, projection='2d'):
         plt.show()
         
 def generate_random_integers(count, min_value=1, max_value=100,seed=41):
-    print(f"generate_random_int:{seed}")
+    # print(f"generate_random_int:{seed}")
     random.seed(seed)
     if count <= 0:
         raise ValueError("生成数量必须是正整数")

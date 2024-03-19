@@ -19,7 +19,7 @@ class MyMFCC:
         # 打印参数信息
         params = {'sample_rate': rate, 'winstep': winstep, 'numcep': numcep,
                   'nfilt': nfilt, 'nfft': nfft, 'ceplifter': ceplifter, 'concat': concat, 'dynamic': dynamic}
-        self._print_params(params)
+        # self._print_params(params)
 
         self.rate = rate
         self.winstep = winstep
@@ -87,9 +87,10 @@ class MyMFCC:
 
         else:
             if dynamic:
-                return feat_dy[:, :num_features]
+                return feat_dy[:, num_features*2:]
             else:
-                return feat[:, :num_features]
+                return feat[:, num_features*2:]
+                # return feat[:, :num_features]
 
 def custom_mfcc():
     

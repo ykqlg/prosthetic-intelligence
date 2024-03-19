@@ -24,7 +24,7 @@ class MyDataset:
         # 打印参数信息
         params = {'test_size': test_size, 'random_state': random_state,
                   'forward': forward, 'backward': backward}
-        self._print_params(params)
+        # self._print_params(params)
 
         labels_df = pd.read_csv(label_file_path)
         filePaths = labels_df['FilePath'].values
