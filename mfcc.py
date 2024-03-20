@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import logging
 from python_speech_features import mfcc
 from python_speech_features import delta
 
@@ -8,42 +7,18 @@ import decimal
 
 import numpy
 import math
-import logging
 
 class MyMFCC:
-    def __init__(self, rate, winstep=0.01, numcep=13, nfilt=26, nfft=512, ceplifter=22,
-                 concat=True, dynamic=False, logger=None) -> None:
-
-        self.logger = logger or logging.getLogger(__name__)
-
-        # 打印参数信息
-        params = {'sample_rate': rate, 'winstep': winstep, 'numcep': numcep,
-                  'nfilt': nfilt, 'nfft': nfft, 'ceplifter': ceplifter, 'concat': concat, 'dynamic': dynamic}
-        # self._print_params(params)
-
-        self.rate = rate
-        self.winstep = winstep
-        self.numcep = numcep
-        self.nfilt = nfilt
-        self.nfft = nfft
-        self.ceplifter = ceplifter
-        self.concat = concat
-        self.dynamic = dynamic
-
-    def _print_params(self, params):
-        self.logger.debug("=======> MFCC parameters: ")
-
-        # 循环打印参数
-        for param, value in params.items():
-            self.logger.debug(f"{param}: {value}")
+    def __init__(self, args) -> None:
+        self.args = args
 
     def get_feat(self, dataSet):
         # return self.get_add_feat(dataSet)
         return self.get_concat_feat(dataSet)
 
     def get_concat_feat(self, dataSet):
-        concat = self.concat
-        dynamic = self.dynamic
+        concat = self.args.concat
+        dynamic = self.args.dynamic
 
         feat_list = []
 
@@ -52,8 +27,8 @@ class MyMFCC:
 
             for axis in range(3):
                 signal = dataSet[i, axis]
-                mfcc_feat = mfcc(signal, self.rate, winstep=self.winstep, numcep=self.numcep,
-                                 nfilt=self.nfilt, nfft=self.nfft, ceplifter=self.ceplifter).reshape(-1)
+                mfcc_feat = mfcc(signal, self.args.fs, winstep=self.args.winstep, numcep=self.args.numcep,
+                                 nfilt=self.args.nfilt, nfft=self.args.nfft, ceplifter=self.args.ceplifter).reshape(-1)
                 mfcc_feats.append(mfcc_feat)
 
             # 将 XYZ 轴的 MFCC 特征连接在一起
@@ -90,9 +65,3 @@ class MyMFCC:
                 return feat_dy[:, num_features*2:]
             else:
                 return feat[:, num_features*2:]
-                # return feat[:, :num_features]
-
-def custom_mfcc():
-    
-    return
-

@@ -95,3 +95,46 @@ def visualize_evaluation(y_true, y_prob, y_pred, save_dir=None):
     else:
         plt.show()
 
+def grid_search():
+    if grid_search:
+        param_grid = {
+            'mfcc__winstep': [0.01],
+            'mfcc__nfft': [256, 512, 1024, 2048],  # 其他FFT大小
+            'mfcc__nfilt': [20, 22, 24, 26],  # 其他Mel滤波器数量
+            'mfcc__numcep': [12, 13, 14],  # 其他倒谱系数个数
+        }
+        best_score = 0
+        best_params = {}
+        total_combinations = len(list(product(*param_grid.values())))
+
+        for values in tqdm(product(*param_grid.values()), total=total_combinations, desc='Grid Search Progress'):
+            params = dict(zip(param_grid.keys(), values))
+
+            for param, value in params.items():
+                component, param_name = param.split('__')
+                if component == 'mfcc':
+                    myMFCC.__setattr__(param_name, value)
+
+            X_train_feat = myMFCC.get_feat(X_train)
+
+            cross_val_scores = cross_val_score(
+                model, X_train_feat, y_train, cv=5)
+            avg_score = cross_val_scores.mean()
+
+            if avg_score > best_score:
+                best_score = avg_score
+                best_params = params
+
+            model.fit(X_train_feat, y_train)
+
+            X_test_feat = myMFCC.get_feat(X_test)
+            y_pred = model.predict(X_test_feat)
+            logger.debug(f"Params:\n {params}")
+            logger.debug(f"CV Scores:\n {avg_score}")
+            logger.debug(f"Predict Scores:\n {accuracy_score(y_test,y_pred)}")
+            # logger.debug(f"Predict Classification Report:\n{classification_report(y_test, y_pred, digits=4)}")
+
+        logger.info(f"Best parameters: {best_params}")
+        logger.info(f"Best cross-validation score: {best_score}")
+
+        return

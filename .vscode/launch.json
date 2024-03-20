@@ -23,10 +23,33 @@
             "miDebuggerPath": "/usr/bin/gdb"
         },
         {
-            "name": "Debug:MFCC.py",
+            "name": "Debug: main.py",
             "type": "python",
             "request": "launch",
             "program": "${file}"
+        }
+        {
+            "name": "Python: Launch",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "--winstep", "0.01",
+                "--numcep", "13",
+                "--nfilt", "26",
+                "--nfft", "512",
+                "--ceplifter", "22",
+                "--no-concat",
+                "--no-dynamic",
+                "--label_file_path", "./label_file.csv",
+                "--test_size", "0.2",
+                "--random_state", "42",
+                "--fs", "1330",
+                "--forward", "0.5",
+                "--backward", "0.7"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
         }
     ]
 }

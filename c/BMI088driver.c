@@ -13,21 +13,21 @@ fp32 BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
 
 extern SPI_HandleTypeDef *hspi_acc;
 
-SPI_HandleTypeDef *BMI088_spi_init(int channel, int speed, int debug)
-{
-    int fd = wiringPiSPISetup(channel, speed);
-    if (fd == -1)
-    {
-        printf("SPI setup failed: Channel %d\n", channel);
-        return NULL;
-    }
-    SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)malloc(sizeof(SPI_HandleTypeDef));
-    hspi->wfd = fd;
-    hspi->rfd = channel;
-    hspi->debug = debug;
+// SPI_HandleTypeDef *BMI088_spi_init(int channel, int speed, int debug)
+// {
+//     int fd = wiringPiSPISetup(channel, speed);
+//     if (fd == -1)
+//     {
+//         printf("SPI setup failed: Channel %d\n", channel);
+//         return NULL;
+//     }
+//     SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)malloc(sizeof(SPI_HandleTypeDef));
+//     hspi->wfd = fd;
+//     hspi->rfd = channel;
+//     hspi->debug = debug;
 
-    return hspi;
-}
+//     return hspi;
+// }
 
 static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] =
     {
