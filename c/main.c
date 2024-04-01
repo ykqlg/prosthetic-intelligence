@@ -61,7 +61,11 @@ int main(void)
 		// printf("%f %f %f\n", accel[0], accel[1], accel[2]);
 		fprintf(file, "%f,%f,%f,%f\n", accel[0], accel[1], accel[2], ((double)(time - start_time)) / CLOCKS_PER_SEC);
 
-		for (int i = 0; i < 140000; i++)
+		// pi_4B sample rate is far less than pi_5
+		uint32_t interval_4B = 140000;	
+		uint32_t interval_5 = 297200;
+
+		for (int i = 0; i < interval_5; i++)
 			;
 	}
 
@@ -89,7 +93,7 @@ void createFileNameWithTime(char *filePath)
 	strftime(timeString, sizeof(timeString), "%Y%m%d_%H%M%S", localTime);
 
 	// 构建文件路径
-	sprintf(filePath, "../output/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
+	sprintf(filePath, "../output2/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
 
 	FILE *outputFile = fopen("targetFileName.txt", "w");
 	if (outputFile == NULL)

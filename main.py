@@ -6,6 +6,7 @@ import sys
 from sklearn.model_selection import cross_val_score, cross_val_predict, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+import joblib
 
 
 import logging.config
@@ -23,14 +24,15 @@ from mfcc import MyMFCC
 from opts import args
 
 def main():
-    random_numbers = generate_random_integers(3, 1, 100)
+    random_numbers = generate_random_integers(args.repeat_num, 1, 100)
     acc_list = []
     time_list = []
     for random_num in random_numbers:
         args.random_state= random_num
         dataSet = MyDataset(args)
         model = SVC(kernel='linear', probability=True, C=0.1)
-        X_train, y_train, X_test, y_test = dataSet.get_data()
+        X_train, y_train = dataSet.get_train_data()
+        X_test, y_test = dataSet.get_test_data()
         myMFCC = MyMFCC(args)
         
 
@@ -41,7 +43,7 @@ def main():
         # cross_val_scores = cross_val_score(model, X_train_feat, y_train, cv=5)
         # logger.info("5-Fold CV: {:.4f}".format(cross_val_scores.mean()))
         model.fit(X_train_feat, y_train)
-
+        joblib.dump(model, './model/model.pkl')
         test_len = X_test.shape[0]
         start_time = time.time()
         
@@ -79,14 +81,14 @@ def main():
 
 def param():
     
-    param_name = 'nfft' # 必须与args的参数名严格一致
+    param_name = 'backward' # 必须与args的参数名严格一致
     task_name = param_name+'_param_test'
-    # param_list = np.linspace(0.3, 1.2, num=10, endpoint=True)
+    param_list = np.linspace(0.3, 1.2, num=10, endpoint=True)
     # param_list = np.linspace(0.1, 0.6, num=12, endpoint=True)
     # param_list = [0.6,0.65, 0.7, 0.725, 0.75, 0.775, 0.8,0.9]
     # param_list = [0.6,0.7, 0.73, 0.76,0.8,0.9]
     
-    param_list = [128,256, 512, 1024,2048]
+    # param_list = [128,256, 512, 1024,2048]
     # param_list = [2,4,6,8, 10,12,14,16]
     logger.info(f"{task_name}: {param_list}")
 
@@ -111,7 +113,8 @@ def param():
     fig, ax1 = plt.subplots()
 
     color = 'tab:blue'
-    ax1.set_xlabel('Param Values')
+    # ax1.set_xlabel('Param Values')
+    ax1.set_xlabel('Second')
     ax1.set_ylabel('Accuracy', color=color)
     ax1.plot(param_list, accuracies, marker='s', color=color)
     ax1.tick_params(axis='y', labelcolor=color)
@@ -130,44 +133,48 @@ def param():
     plt.show()
 
     return
+
     
-    
-def svm_gridsearch():
+
+def test():
     dataSet = MyDataset(args)
-    X_train, y_train, X_test, y_test = dataSet.get_data()
-
-    svm_model = SVC(kernel='linear', probability=True, C=0.1)
-
+    model = SVC(kernel='linear', probability=True, C=0.1)
+    X_train, y_train = dataSet.get_train_data()
+    X_test, y_test = dataSet.get_test_data()
     myMFCC = MyMFCC(args)
-    X_train_feat = myMFCC.get_feat(X_train)
+
+    # X_train_feat = myMFCC.get_feat(X_train)
+    # model.fit(X_train_feat, y_train)
+    # joblib.dump(model,'./model/train_model.pkl')
+    model = joblib.load('./model/train_model.pkl')
+
+
+
+    print(f"Completed Train Section")
+
+
+
     
-    param_grid = {'C': [0.1, 1, 10, 100],
-              'gamma': [0.01, 0.1, 1, 10],
-              'kernel': ['linear', 'rbf', 'poly']}
-
-    grid_search = GridSearchCV(svm_model, param_grid, cv=5, scoring='accuracy')
-    grid_search.fit(X_train_feat, y_train)
-    
-    print("最优参数：", grid_search.best_params_)
-
-    # 在验证集上评估性能
-    best_model = grid_search.best_estimator_
-
     X_test_feat = myMFCC.get_feat(X_test)
-    y_pred = best_model.predict(X_test_feat)
-    y_prob = best_model.predict_proba(X_test_feat)[:, 1]
-
+    y_pred = model.predict(X_test_feat)
+    y_prob = model.predict_proba(X_test_feat)[:, 1]
+    
     acc = accuracy_score(y_test, y_pred)
-    logger.info(f"Predict scores: {acc}")
-
-    return acc
-
+    print(f"acc: {acc}")
+    visualize_evaluation(y_test, y_prob, y_pred, save_dir='./img')
+    
+    return
 
 if __name__ == "__main__":
     logger.debug("Arguments: %s", sys.argv[1:])
 
-    # acc = main()
-    # logger.info(f"acc : {acc}")
+    if args.test_only:
+        test()
+    else:
+        acc = main()
+        logger.info(f"acc : {acc}")
+
+
     # svm_gridsearch()
 
-    param()
+    # param()

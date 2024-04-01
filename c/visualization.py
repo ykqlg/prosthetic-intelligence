@@ -89,12 +89,46 @@ def plot_data(filename):
     plt.savefig("visualization.png")
     # plt.show()
 
+def plot_data2(filename):
     
+    df = pd.read_csv(filename)
+    ACC_X = df['ACC_X']
+    ACC_Y = df['ACC_Y']
+    ACC_Z = df['ACC_Z']
+    time = df['Time']
+    
+    
+    fs = 1330
+    # fs = 1/np.mean(np.diff(time))
+
+
+    
+    # 创建一个包含三个子图的画布
+    fig, axes = plt.subplots(1, 3, figsize=(20, 4)) 
+    irange = 5000
+    ylim = False
+    axes[0].set_title('ACC_X')
+    axes[1].set_title('ACC_Y')
+    axes[2].set_title('ACC_Z')
+    for axe in axes:
+        if ylim :axe.set_ylim(-irange, irange)
+        axe.set_ylabel('mg')
+    
+        
+    axes[0].plot(time,ACC_X)
+    axes[1].plot(time,ACC_Y)
+    axes[2].plot(time,ACC_Z)
+
+
+    plt.suptitle(filename)
+    plt.tight_layout()
+    plt.savefig("visualization.png")
+    # plt.show()
 
 
 if __name__ == "__main__":
    
-    folder_path = '../output'
+    folder_path = '../output2'
     latest_file = get_latest_file(folder_path)
 
     # print('latest_file:',latest_file)

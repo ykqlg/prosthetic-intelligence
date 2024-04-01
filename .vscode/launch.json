@@ -23,14 +23,21 @@
             "miDebuggerPath": "/usr/bin/gdb"
         },
         {
-            "name": "Debug: main.py",
-            "type": "python",
+            "name": "Debug: this file",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}"
-        }
+        },
+        {
+            "name": "Debug: realtime.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/py/realtime.py",
+            "cwd": "${workspaceFolder}/py",
+        },
         {
             "name": "Python: Launch",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "args": [

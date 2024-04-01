@@ -209,7 +209,8 @@ def main(random_state=43):
     concat = True
     dynamic = False
     
-    X_train, y_train, X_test, y_test = dataSet.get_data()
+    X_train, y_train = dataSet.get_train_data()
+    X_test, y_test = dataSet.get_test_data()
     rate = dataSet.get_rate()
     myMFCC = MyMFCC(rate=rate,concat=concat,dynamic=dynamic,logger=logger)
 

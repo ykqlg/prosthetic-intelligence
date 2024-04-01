@@ -23,7 +23,7 @@ void createFileNameWithTime(char *filePath)
     strftime(timeString, sizeof(timeString), "%Y%m%d_%H%M%S", localTime);
 
     // 构建文件路径
-    sprintf(filePath, "../output/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
+    sprintf(filePath, "../output2/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
 }
 
 void runDataCollector()
@@ -48,7 +48,7 @@ void onOKClicked(GtkWidget *widget, gpointer data)
     if (strcmp(text, "0") == 0 || strcmp(text, "1") == 0)
     {
         // 打开附加标签文件，追加文件名和标签信息
-        FILE *labelFile = fopen("../label_file.csv", "a");
+        FILE *labelFile = fopen("../label_file2.csv", "a");
         if (labelFile != NULL)
         {
             // 检查文件是否为空
@@ -75,7 +75,7 @@ void onContinueClicked(GtkWidget *widget, gpointer data)
     if (strcmp(text, "0") == 0 || strcmp(text, "1") == 0)
     {
         // 打开附加标签文件，追加文件名和标签信息
-        FILE *labelFile = fopen("../label_file.csv", "a");
+        FILE *labelFile = fopen("../label_file2.csv", "a");
         if (labelFile != NULL)
         {
             fprintf(labelFile, "%s,%s\n", dataFileName, text);
