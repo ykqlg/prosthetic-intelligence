@@ -53,23 +53,18 @@ sensorThread = mylib.sensorThread
 sensorThread.argtypes = [ctypes.c_void_p]
 sensorThread.restype = ctypes.c_void_p
 
-# 声明 C 函数 Min
-Min = mylib.Min
-Min.argtypes = [ctypes.c_int, ctypes.c_int]
-Min.restype = ctypes.c_int
-
-# 声明 C 函数 get_positive_number
-get_positive_number = mylib.get_positive_number
-get_positive_number.argtypes = []
-get_positive_number.restype = ctypes.c_int
 
 # 声明 C 函数 initSensors
 initSensors = mylib.initSensors
 initSensors.argtypes = [pSensor]
 initSensors.restype = None
 
-read_dataZ = mylib.read_dataZ
-read_dataZ.argtypes = [pSensor]
-read_dataZ.restype = ctypes.c_int16
+# read_dataZ = mylib.read_dataZ
+# read_dataZ.argtypes = [pSensor]
+# read_dataZ.restype = ctypes.c_float
+
+read_data = mylib.read_data
+read_data.argtypes = [pSensor,ctypes.POINTER(ctypes.c_float)]
+read_data.restype = None
 
 

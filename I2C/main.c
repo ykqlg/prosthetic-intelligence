@@ -26,23 +26,29 @@
 #define OUT_Y_H 0x2B
 #define OUT_Z_L 0x2C
 #define OUT_Z_H 0x2D
+#define GSCALE 0.001952*1000
 
 #define Sensor_ADDRESS 0x19
 #define BUFFER_SIZE 6 // (原来是126 = 6字节 x 21)
-#define GSCALE 0.001952 
-#define SENSOR_NUM 1   // 传感器个数
-int sampleNum = 16000; // 采样数
 
+#define SENSOR_NUM 1   // 传感器个数
+#define SAMPLE_NUM 16000 // 采样数
 
 // 定义一个结构体来保存每个加速度计的参数
 typedef struct SensorInfo
 {
     int sensorIndex;             // 传感器编号
     int i2cFile;                 // i2c设备
-    unsigned char msgBuffer[BUFFER_SIZE]; // 缓冲数组
+    char msgBuffer[BUFFER_SIZE]; // 缓冲数组
     char startTime[100];
 } SensorInfo, *pSensor;
 
+int16_t twoComplement16bit(u_int16_t hexData) {
+    // 计算补码值
+    int16_t result = (int16_t)hexData;
+    result = (result & 0x8000) ? -((~result) + 1) : result;
+    return result;
+}
 // 函数原型声明
 
 void writeRegister(int i2cFile, unsigned char regAddress, unsigned char value);       // 向某个i2c设备的某个寄存器写入数据
@@ -51,9 +57,9 @@ void initializeByteStreaming(pSensor arg, unsigned char regAddress, int bufferSi
 void setup(pSensor arg);                                                             // 配置某个i2c设备
 void loop(pSensor arg);                                                              // 某个i2c设备循环读取数据
 void *sensorThread(void *arg);                                                        // 每个传感器所执行的线程
-int Min(int a, int b);                                                                // 求两数最小
+void read_data(pSensor arg, float data[3]);
 void initSensors(pSensor sensorPointer); // 初始化每个传感器的基本信息
-int16_t read_dataZ(pSensor arg);
+void createDir(char* dir_name);
 
 int main(int argc, char *argv[])
 {
@@ -61,12 +67,14 @@ int main(int argc, char *argv[])
     if (argc >= 2)
     {
         // 将命令行参数转换为整数
-        sampleNum = atoi(argv[1]);
+        int sampleNum = atoi(argv[1]);
         if (sampleNum <= 0)
-            sampleNum = 16000;
+            sampleNum = 1600;
     }
     // 结构体数组存储每个加速度计的信息
     SensorInfo accArgs[SENSOR_NUM];
+    char* dir_name = (char*)malloc(sizeof(char)*100);
+    createDir(dir_name);
     // 初始化每个传感器的基本信息
     initSensors(accArgs);
     // 为每个加速度计创建线程
@@ -89,9 +97,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-// 函数功能：初始化每个传感器的基本信息
-void initSensors(pSensor sensorPointer)
-{
+void createDir(char* dir_name){
     // 获取当前时间
     time_t currentTime;
     struct tm *localTime;
@@ -116,9 +122,14 @@ void initSensors(pSensor sensorPointer)
     } else {
         printf("Directory already exists.\n");
     }
-    
 
-    for (int i = 0; i < 1; i++) // 改动了
+    strcpy(dir_name, formattedTime);
+}
+
+// 函数功能：初始化每个传感器的基本信息
+void initSensors(pSensor sensorPointer)
+{
+    for (int i = 0; i < SENSOR_NUM; i++)
     {
         // 每个传感器有自己的编号
         (sensorPointer + i)->sensorIndex = i;
@@ -132,7 +143,6 @@ void initSensors(pSensor sensorPointer)
             exit(EXIT_FAILURE);
         }
         
-        strcpy((sensorPointer + i)->startTime, formattedTime);
     }
 }
 
@@ -160,9 +170,8 @@ void writeRegister(int i2cFile, unsigned char regAddress, unsigned char value)
 // 函数功能：从某个i2c设备的某个寄存器读取1个字节
 unsigned char readRegOneByte(int i2cFile, unsigned char regAddress)
 {
-    // if (DEBUG_MOD)
-    //     printf("Try to read 1 byte from register 0x%02x.\n", regAddress);
-        // printf("fd: %d.\n", i2cFile);
+    if (DEBUG_MOD)
+        printf("Try to read 1 byte from register 0x%02x.\n", regAddress);
     // 尝试将寄存器地址 regAddress 写入到 I2C 设备文件，检查写入的字节数是否等于sizeof(regAddress)
     // 如果不等于，说明写入失败，则打印错误信息并退出程序
     if (write(i2cFile, &regAddress, sizeof(regAddress)) != sizeof(regAddress))
@@ -179,8 +188,8 @@ unsigned char readRegOneByte(int i2cFile, unsigned char regAddress)
         perror("Failed to read from I2C device");
         exit(EXIT_FAILURE);
     }
-    // if (DEBUG_MOD)
-    //     printf("Read successfully!\n");
+    if (DEBUG_MOD)
+        printf("Read successfully!\n");
     return value;
 }
 
@@ -205,14 +214,8 @@ void initializeByteStreaming(pSensor arg, unsigned char regAddress, int bufferSi
             perror("Failed to read from I2C device");
             exit(EXIT_FAILURE);
         }
-        if (DEBUG_MOD){
-            printf("->C: ");
-            for (int i = 0; i < bufferSize; i++) {
-                printf("%02X ", arg->msgBuffer[i]);
-            }           
-            printf("\n");
+        if (DEBUG_MOD)
             printf("Read successfully!\n");
-        }
     }
     else
     {
@@ -220,37 +223,6 @@ void initializeByteStreaming(pSensor arg, unsigned char regAddress, int bufferSi
     }
 }
 
-
-int16_t read_dataZ(pSensor arg)
-{
-    unsigned char regAddress = OUT_X_L;
-    int bufferSize = BUFFER_SIZE;
-    u_int8_t* temp = (u_int8_t*)malloc(sizeof(u_int8_t)*bufferSize);
-    if (DEBUG_MOD)
-        printf("Try to read %d bytes from register 0x%02x\n", bufferSize, regAddress);
-    // 尝试将寄存器地址 regAddress 中写入到 I2C 设备文件，检查写入的字节数是否等于sizeof(regAddress)
-    // 如果不等于，说明写入失败，则打印错误信息并退出程序
-    if (write(arg->i2cFile, &regAddress, sizeof(regAddress)) != sizeof(regAddress))
-    {
-        perror("Failed to write to I2C device");
-        exit(EXIT_FAILURE);
-    }
-    // 尝试从 I2C 设备文件读取bufferSize个字节到变量 buffer ，检查读入的字节数是否等于bufferSize
-    // 如果不等于，说明写入失败，则打印错误信息并退出程序
-    if (bufferSize > 0)
-    {
-        if (read(arg->i2cFile, temp, bufferSize) != bufferSize)
-        {
-            perror("Failed to read from I2C device");
-            exit(EXIT_FAILURE);
-        }
-        if (DEBUG_MOD){
-            printf("Read successfully!\n");
-        }
-    }
-    int16_t data_z = ((temp[4] << 8)+ temp[5]) * GSCALE;
-    return data_z;
-}
 // 初始化设置
 void setup(pSensor arg)
 {
@@ -290,7 +262,7 @@ void loop(pSensor arg)
     
     // 使用格式化字符串作为文件名
     char outputFileName[100];
-    snprintf(outputFileName, sizeof(outputFileName), "./data/%s/Sensor%d_%s.txt", arg->startTime, arg->sensorIndex, arg->startTime);
+    snprintf(outputFileName, sizeof(outputFileName), "./data/%s/Sensor%d_%s.csv", arg->startTime, arg->sensorIndex, arg->startTime);
 
     // 打开要写入的文件
     FILE *file = fopen(outputFileName, "a");
@@ -300,42 +272,34 @@ void loop(pSensor arg)
         exit(EXIT_FAILURE);
     }
 
-    int totalByteNum = sampleNum * 6;                             // 总共读取的字节数，因为每个完整数据样本包含六个字节，即 [X_L, X_H, Y_L, Y_H, Z_L, Z_H]
-    char *data = (char *)malloc(sizeof(char) * totalByteNum *2); // 从堆中申请空间，用于暂存读取到的数据
-    int char_pointer = 0;                                         // 指向要插入数据的下一个位置
+    int count = 0;
+    float data_array[3];
 
-	clock_t start_time = clock();
-
-    while (totalByteNum > 0) // 只要还有数据没有读取完，就继续读
+    while(count < SAMPLE_NUM) // 只要还有数据没有读取完，就继续读
     {
-        if (readRegOneByte(arg->i2cFile, STATUS) & 1 == 1) // 检查状态寄存器，判断是否有新数据
-        {
-            initializeByteStreaming(arg, OUT_X_L, BUFFER_SIZE); // 读取数据到buffer中
-            for (int i = 0; i < BUFFER_SIZE; ++i)
-            {
-                // 直接计算出对应的实际值，写入到csv
-                // 好像应该是fp64类型
-                int16_t dataX = ((arg->msgBuffer[1] << 8)+ arg->msgBuffer[0]) * GSCALE;
-                int16_t dataX = ((arg->msgBuffer[3] << 8)+ arg->msgBuffer[2]) * GSCALE;
-                int16_t dataX = ((arg->msgBuffer[5] << 8)+ arg->msgBuffer[4]) * GSCALE;
-        		fprintf(file, "%f,%f,%f,%f\n", accel[0], accel[1], accel[2], ((double)(time - start_time)) / CLOCKS_PER_SEC);
-
-                sprintf(data + char_pointer, "%02x", arg->msgBuffer[i]); // 将寄存器中读取到的16进制数据写入到data数组
-                char_pointer += 2;
-            }
-            totalByteNum -= BUFFER_SIZE;
+        if (readRegOneByte(arg->i2cFile, STATUS) & 1 == 1) {
+            read_data(arg, data_array);
+            fprintf(file, "%f,%f,%f\n", data_array[0], data_array[1], data_array[2]);
+            count++;
         }
     }
-
-    clock_t end_time = clock();
-	double cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-	printf("==> Execution Time: %fs\n", cpu_time_used);
-
-    fprintf(file, "%s", data); // 统一向输出文件写入数据
-    free(data);                // 释放内存
     fclose(file);              // 关闭输出文件
 
     printf("\nSensor %d completed!\n", arg->sensorIndex);
+}
+
+// 循环读取数据并写入到文件
+void read_data(pSensor arg, float data[3])
+{
+    initializeByteStreaming(arg, OUT_X_L, BUFFER_SIZE); // 读取数据到buffer中
+    u_int16_t OUT_X = (u_int16_t)arg->msgBuffer[1] << 8 | arg->msgBuffer[0];
+    u_int16_t OUT_Y = (u_int16_t)arg->msgBuffer[3] << 8 | arg->msgBuffer[2];
+    u_int16_t OUT_Z = (u_int16_t)arg->msgBuffer[5] << 8 | arg->msgBuffer[4];
+
+    data[0] = (twoComplement16bit(OUT_X)>> 2) * GSCALE;
+    data[1] = (twoComplement16bit(OUT_Y)>> 2) * GSCALE;
+    data[2] = (twoComplement16bit(OUT_Z)>> 2) * GSCALE;
+    
 }
 
 // 每个加速度计所执行的线程

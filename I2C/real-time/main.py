@@ -11,6 +11,8 @@ import pandas as pd
 import time
 import sys
 from python_speech_features import mfcc
+import scipy.signal as signal
+
 
 import mylib_py as lib
 import ctypes
@@ -37,7 +39,25 @@ BUFFER_SIZE = 6  # (原来是126 = 6字节 x 21)
 SENSOR_NUM = 4   # 传感器个数
 sampleNum = 16000  # 采样数
 
+def butter_lowpass_filter(data, cutoff, fs, order=5):
+    b, a = signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
+    y = signal.lfilter(b, a, data)
+    return y
 
+def butter_highpass_filter(data, cutoff, fs, order=5):
+    b, a = signal.butter(order, cutoff,fs=fs, btype='high', analog=False)
+    y = signal.filtfilt(b, a, data)
+    return y
+
+def filter_window(signal, fs):
+    signal_filtered_L = butter_lowpass_filter(signal, cutoff=500, fs=fs, order=6)
+    signal_filtered_H = butter_highpass_filter(signal_filtered_L, cutoff=20, fs=fs, order=5)
+    return signal_filtered_H
+
+
+def detect_peaks(accel_window, threshold=1000):
+    peaks = signal.find_peaks(accel_window, height=threshold)[0]
+    return peaks
 def main_c():
     
     sensor_info = lib.SensorInfo()
@@ -106,7 +126,7 @@ def main():
     before_length = int(forward*fs)
     after_length = int(backward*fs)
     print(f"before_length & after_length: {before_length} and {after_length}")
-    svm_model = joblib.load('../model/model.pkl') 
+    svm_model = joblib.load('../../model/model.pkl') 
     buf = np.zeros((2,buf_size))
     
     
@@ -114,27 +134,7 @@ def main():
     sensor_info_ptr = lib.pSensor(sensor_info)
     lib.initSensors(sensor_info_ptr)
     lib.setup(sensor_info_ptr)
-
-    sample_num = sampleNum
-
-    total_byte_num = sample_num * 6
-    data = (ctypes.c_ubyte * (total_byte_num))()  # 使用 ctypes 创建缓冲区
-    char_pointer = 0
-    
-    st = time.time()
-    while total_byte_num > 0:
-        if lib.readRegOneByte(sensor_info.i2cFile, STATUS) & 1 == 1:
-            lib.initializeByteStreaming(sensor_info_ptr, OUT_X_L, BUFFER_SIZE)
-            for i in range(BUFFER_SIZE):
-                data[char_pointer] = ctypes.c_ubyte(sensor_info.msgBuffer[i])  # 将读取到的数据写入到 data 缓冲区
-                char_pointer += 1
-            total_byte_num -= BUFFER_SIZE
-    et = time.time()
-    print(f"Time: {et-st}")
-    print("\nSensor {} completed!\n".format(sensor_info.sensorIndex))
-    
  
-    
     p = 0 # pointer to the last collected data
     print(f"=> Start !!")
     start_time = time.time()
@@ -189,6 +189,6 @@ def main():
 
 if __name__ == "__main__":
     
-    # main()
-    main_c()
+    main()
+    # main_c()
     # test()
