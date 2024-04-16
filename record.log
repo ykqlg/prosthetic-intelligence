@@ -361,3 +361,43 @@
 2024-03-28 15:05:05,376 - main - DEBUG - Arguments: ['--test_only', '--repeat_num', '3', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './label_file.csv', '--label_file_path', './label_file2.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
 2024-03-28 15:05:15,843 - main - DEBUG - Arguments: ['--test_only', '--repeat_num', '3', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './label_file.csv', '--label_file_path', './label_file2.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
 2024-03-28 15:05:19,886 - main - DEBUG - Arguments: ['--test_only', '--repeat_num', '3', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './label_file.csv', '--label_file_path', './label_file2.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 08:52:21,064 - main - DEBUG - Arguments: ['--repeat_num', '5', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './data/train_label_file.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 08:53:17,386 - main - DEBUG - Arguments: ['--repeat_num', '5', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './data/train_label_file.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 08:54:35,873 - main - DEBUG - Arguments: ['--repeat_num', '5', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './data/train_label_file.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 08:58:46,463 - main - DEBUG - Arguments: ['--repeat_num', '5', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './data/train_label_file.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 08:59:14,989 - main - INFO - acc : (0.98258, nan)
+2024-04-16 09:01:07,760 - main - DEBUG - Arguments: ['--repeat_num', '5', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './data/train_label_file.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 09:01:13,277 - main - INFO - 5-Fold CV: 0.9818
+2024-04-16 09:01:18,807 - main - INFO - 5-Fold CV: 0.9819
+2024-04-16 09:01:24,347 - main - INFO - 5-Fold CV: 0.9855
+2024-04-16 09:01:29,887 - main - INFO - 5-Fold CV: 0.9819
+2024-04-16 09:01:35,553 - main - INFO - 5-Fold CV: 0.9818
+2024-04-16 09:01:35,963 - main - INFO - acc : (0.98258, nan)
+2024-04-16 09:17:24,818 - main - DEBUG - Arguments: ['--test_only', '--repeat_num', '3', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './data/train_label_file.csv', '--test_label_file', './data/test_label_file.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 09:17:28,391 - main - DEBUG - Predict Classification Report:
+              precision    recall  f1-score   support
+
+           0     0.8750    0.8750    0.8750        16
+           1     0.9592    0.9592    0.9592        49
+
+    accuracy                         0.9385        65
+   macro avg     0.9171    0.9171    0.9171        65
+weighted avg     0.9385    0.9385    0.9385        65
+
+2024-04-16 10:33:04,079 - main - DEBUG - Arguments: ['--repeat_num', '5', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './data/train_label_file.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 10:33:04,080 - main - INFO - forward_param_test: [0.02       0.04521739 0.07043478 0.09565217 0.12086957 0.14608696
+ 0.17130435 0.19652174 0.22173913 0.24695652 0.27217391 0.2973913
+ 0.3226087  0.34782609 0.37304348 0.39826087 0.42347826 0.44869565
+ 0.47391304 0.49913043 0.52434783 0.54956522 0.57478261 0.6       ]
+2024-04-16 10:33:04,080 - main - DEBUG - random_numbers:[49, 43, 30]
+2024-04-16 10:33:08,685 - main - INFO - 5-Fold CV: 0.9673
+2024-04-16 10:33:13,778 - main - INFO - 5-Fold CV: 0.9747
+2024-04-16 10:33:18,231 - main - INFO - 5-Fold CV: 0.9710
+2024-04-16 10:38:35,937 - main - DEBUG - Arguments: ['--test_only', '--repeat_num', '3', '--winstep', '0.01', '--numcep', '13', '--nfilt', '26', '--nfft', '512', '--ceplifter', '22', '--no-concat', '--no-dynamic', '--train_label_file', './data/train_label_file.csv', '--test_label_file', './data/test_label_file.csv', '--test_size', '0.2', '--random_state', '42', '--fs', '1330', '--forward', '0.45', '--backward', '0.8']
+2024-04-16 10:38:35,938 - main - INFO - forward_param_test: [0.02       0.04521739 0.07043478 0.09565217 0.12086957 0.14608696
+ 0.17130435 0.19652174 0.22173913 0.24695652 0.27217391 0.2973913
+ 0.3226087  0.34782609 0.37304348 0.39826087 0.42347826 0.44869565
+ 0.47391304 0.49913043 0.52434783 0.54956522 0.57478261 0.6       ]
+2024-04-16 10:38:35,938 - main - DEBUG - random_numbers:[49, 43, 30]
+2024-04-16 10:45:22,044 - main - INFO - accuracies: [0.95385, 0.90769, 0.92308, 0.92308, 0.93846, 0.90769, 0.92308, 0.95385, 0.92308, 0.90769, 0.90769, 0.92308, 0.93846, 0.89231, 0.93846, 0.96923, 0.90769, 0.90769, 0.92308, 0.93846, 0.92308, 0.92308, 0.93846, 0.92308]
+2024-04-16 10:45:22,044 - main - INFO - times: [4.86858, 4.95212, 5.08232, 5.18505, 5.25843, 5.39543, 5.45589, 5.57926, 5.67528, 5.796, 5.91254, 6.02088, 6.13158, 6.17982, 6.37175, 6.47759, 6.59906, 6.77544, 6.88242, 7.01213, 7.09187, 7.16919, 7.30353, 7.36517]

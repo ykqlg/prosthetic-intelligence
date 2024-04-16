@@ -10,8 +10,8 @@ python -u main.py \
 --ceplifter 22 \
 --no-concat \
 --no-dynamic \
---train_label_file ./label_file.csv \
---label_file_path ./label_file2.csv \
+--train_label_file ./data/train_label_file.csv \
+--test_label_file ./data/test_label_file.csv \
 --test_size 0.2 \
 --random_state 42 \
 --fs 1330 \

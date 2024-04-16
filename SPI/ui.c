@@ -8,6 +8,8 @@
 char dataFileName[256];
 FILE *file = NULL;
 GtkWidget *textEntry;
+char labelFilePath[] = "../data/train_label_file.csv"; // 全局变量保存文件路径
+
 
 void createFileNameWithTime(char *filePath)
 {
@@ -23,7 +25,7 @@ void createFileNameWithTime(char *filePath)
     strftime(timeString, sizeof(timeString), "%Y%m%d_%H%M%S", localTime);
 
     // 构建文件路径
-    sprintf(filePath, "../output2/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
+    sprintf(filePath, "../data/train/%s.csv", timeString); // 假设存储在名为 "output" 的文件夹中
 }
 
 void runDataCollector()
@@ -48,7 +50,7 @@ void onOKClicked(GtkWidget *widget, gpointer data)
     if (strcmp(text, "0") == 0 || strcmp(text, "1") == 0)
     {
         // 打开附加标签文件，追加文件名和标签信息
-        FILE *labelFile = fopen("../label_file2.csv", "a");
+        FILE *labelFile = fopen(labelFilePath, "a");
         if (labelFile != NULL)
         {
             // 检查文件是否为空
@@ -62,7 +64,7 @@ void onOKClicked(GtkWidget *widget, gpointer data)
                 fprintf(labelFile, "FilePath,Label\n");
             }
 
-            fprintf(labelFile, "%s,%s\n", dataFileName, text);
+            fprintf(labelFile, "%s,%s\n", dataFileName + 3, text);
             fclose(labelFile);
         }
     }
@@ -75,10 +77,10 @@ void onContinueClicked(GtkWidget *widget, gpointer data)
     if (strcmp(text, "0") == 0 || strcmp(text, "1") == 0)
     {
         // 打开附加标签文件，追加文件名和标签信息
-        FILE *labelFile = fopen("../label_file2.csv", "a");
+        FILE *labelFile = fopen(labelFilePath, "a");
         if (labelFile != NULL)
         {
-            fprintf(labelFile, "%s,%s\n", dataFileName, text);
+            fprintf(labelFile, "%s,%s\n", dataFileName + 3, text);
             fclose(labelFile);
         }
     }

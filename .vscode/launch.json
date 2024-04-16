@@ -57,6 +57,18 @@
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug: I2C",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/I2C/main.py",
+            "env": {
+                "LD_LIBRARY_PATH": "${workspaceFolder}/I2C"
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}/I2C",
+            "console": "integratedTerminal"
         }
     ]
 }

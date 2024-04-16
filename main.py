@@ -37,11 +37,11 @@ def main():
         
 
         X_train_feat = myMFCC.get_feat(X_train)
-        # feat_num = X_train_feat.shape[1]
+        feat_num = X_train_feat.shape[1]
         # logger.info(f"feat_num: {feat_num}")
         
-        # cross_val_scores = cross_val_score(model, X_train_feat, y_train, cv=5)
-        # logger.info("5-Fold CV: {:.4f}".format(cross_val_scores.mean()))
+        # acc = cross_val_score(model, X_train_feat, y_train, cv=5).mean()
+        # logger.info("5-Fold CV: {:.4f}".format(acc))
         model.fit(X_train_feat, y_train)
         joblib.dump(model, './model/model.pkl')
         test_len = X_test.shape[0]
@@ -78,13 +78,46 @@ def main():
     
     return mean_acc,mean_time
     
+def param_main():
+    random_numbers = generate_random_integers(args.repeat_num, 1, 100)
+    acc_list = []
+    time_list = []
+    for random_num in random_numbers:
+        args.random_state= random_num
+        dataSet = MyDataset(args)
+        model = SVC(kernel='linear', probability=True, C=0.1)
+        X_train, y_train = dataSet.get_train_data()
+        X_test, y_test = dataSet.get_test_data()
+        myMFCC = MyMFCC(args)
+        
 
+        X_train_feat = myMFCC.get_feat(X_train)
+        
+        model.fit(X_train_feat, y_train)
+
+        test_len = X_test.shape[0]
+        start_time = time.time()
+        
+        X_test_feat = myMFCC.get_feat(X_test)
+        y_pred = model.predict(X_test_feat)
+
+        acc = accuracy_score(y_test, y_pred)
+        end_time = time.time()
+        one_sample_time = (end_time - start_time)/test_len
+        time_list.append(one_sample_time)
+        acc_list.append(acc)
+            
+    mean_acc= round(np.mean(acc_list),5)
+    mean_time = round(np.mean(time_list)*1000,5)
+    
+    return mean_acc,mean_time
+    
 def param():
     
-    param_name = 'backward' # 必须与args的参数名严格一致
+    param_name = 'forward' # 必须与args的参数名严格一致
     task_name = param_name+'_param_test'
-    param_list = np.linspace(0.3, 1.2, num=10, endpoint=True)
-    # param_list = np.linspace(0.1, 0.6, num=12, endpoint=True)
+    # param_list = np.linspace(0.3, 1.2, num=10, endpoint=True)
+    param_list = np.linspace(0.02, 0.6, num=24, endpoint=True)
     # param_list = [0.6,0.65, 0.7, 0.725, 0.75, 0.775, 0.8,0.9]
     # param_list = [0.6,0.7, 0.73, 0.76,0.8,0.9]
     
@@ -101,7 +134,7 @@ def param():
         for param in param_list:
             setattr(args, param_name, param)
             
-            acc,time = main()
+            acc,time = param_main()
             accuracies.append(acc)
             times.append(time)
             pbar.set_description(f'Accuracy: {acc:.4f}, {param_name}={param}')
@@ -112,7 +145,7 @@ def param():
     logger.info(f"times: {times}")
     fig, ax1 = plt.subplots()
 
-    color = 'tab:blue'
+    color = 'tab:black'
     # ax1.set_xlabel('Param Values')
     ax1.set_xlabel('Second')
     ax1.set_ylabel('Accuracy', color=color)
@@ -139,26 +172,17 @@ def param():
 def test():
     dataSet = MyDataset(args)
     model = SVC(kernel='linear', probability=True, C=0.1)
-    X_train, y_train = dataSet.get_train_data()
     X_test, y_test = dataSet.get_test_data()
     myMFCC = MyMFCC(args)
 
-    # X_train_feat = myMFCC.get_feat(X_train)
-    # model.fit(X_train_feat, y_train)
-    # joblib.dump(model,'./model/train_model.pkl')
     model = joblib.load('./model/train_model.pkl')
-
-
-
     print(f"Completed Train Section")
-
-
-
     
     X_test_feat = myMFCC.get_feat(X_test)
     y_pred = model.predict(X_test_feat)
     y_prob = model.predict_proba(X_test_feat)[:, 1]
-    
+    # classification_report(y_test,y_pred,digits=4)
+    logger.debug(f"Predict Classification Report:\n{classification_report(y_test, y_pred, digits=4)}")
     acc = accuracy_score(y_test, y_pred)
     print(f"acc: {acc}")
     visualize_evaluation(y_test, y_prob, y_pred, save_dir='./img')
@@ -168,13 +192,13 @@ def test():
 if __name__ == "__main__":
     logger.debug("Arguments: %s", sys.argv[1:])
 
-    if args.test_only:
-        test()
-    else:
-        acc = main()
-        logger.info(f"acc : {acc}")
+    # if args.test_only:
+    #     test()
+    # else:
+    #     acc = main()
+    #     logger.info(f"acc : {acc}")
 
 
     # svm_gridsearch()
 
-    # param()
+    param() # ./test.sh

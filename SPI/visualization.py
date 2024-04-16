@@ -128,7 +128,7 @@ def plot_data2(filename):
 
 if __name__ == "__main__":
    
-    folder_path = '../output2'
+    folder_path = '../data/train'
     latest_file = get_latest_file(folder_path)
 
     # print('latest_file:',latest_file)

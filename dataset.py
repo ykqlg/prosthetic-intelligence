@@ -23,7 +23,7 @@ class MyDataset:
 
         if args.test_only:
             train_df = pd.read_csv(args.train_label_file)
-            test_df = pd.read_csv(args.label_file_path)
+            test_df = pd.read_csv(args.test_label_file)
 
             filePaths = train_df['FilePath'].values
             data_list = []
@@ -91,7 +91,7 @@ class MyDataset:
             self.y_test = y_test
 
         else:
-            labels_df = pd.read_csv(args.label_file_path)
+            labels_df = pd.read_csv(args.train_label_file)
             filePaths = labels_df['FilePath'].values
             data_list = []
             fs = args.fs

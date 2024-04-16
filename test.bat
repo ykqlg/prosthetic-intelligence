@@ -1,5 +1,6 @@
 python -u main.py ^
---repeat_num 5 ^
+--test_only ^
+--repeat_num 3 ^
 --winstep 0.01 ^
 --numcep 13 ^
 --nfilt 26 ^
@@ -8,6 +9,7 @@ python -u main.py ^
 --no-concat ^
 --no-dynamic ^
 --train_label_file ./data/train_label_file.csv ^
+--test_label_file ./data/test_label_file.csv ^
 --test_size 0.2 ^
 --random_state 42 ^
 --fs 1330 ^
