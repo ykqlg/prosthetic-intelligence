@@ -1,13 +1,13 @@
 #!/bin/bash
 
 python -u main.py \
---repeat_num 5 \
+--repeat_num 3 \
 --winstep 0.01 \
+--winlen 0.025 \
 --numcep 13 \
 --nfilt 26 \
 --nfft 512 \
 --ceplifter 22 \
---no-concat \
 --no-dynamic \
 --train_label_file ./data/train_label_file.csv \
 --test_size 0.2 \

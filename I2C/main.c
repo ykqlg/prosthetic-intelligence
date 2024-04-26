@@ -31,7 +31,7 @@
 #define Sensor_ADDRESS 0x19
 #define BUFFER_SIZE 6 // (原来是126 = 6字节 x 21)
 
-#define SENSOR_NUM 1   // 传感器个数
+#define SENSOR_NUM 4   // 传感器个数
 #define SAMPLE_NUM 16000 // 采样数
 
 // 定义一个结构体来保存每个加速度计的参数
@@ -77,6 +77,11 @@ int main(int argc, char *argv[])
     createDir(dir_name);
     // 初始化每个传感器的基本信息
     initSensors(accArgs);
+
+    for (int i = 0; i < SENSOR_NUM; ++i){
+        strcpy(accArgs[i].startTime,dir_name);
+    }
+
     // 为每个加速度计创建线程
     pthread_t threads[SENSOR_NUM]; // 指向线程标识符的指针
     for (int i = 0; i < SENSOR_NUM; ++i)
@@ -95,6 +100,24 @@ int main(int argc, char *argv[])
         pthread_join(threads[i], NULL);
     }
     return 0;
+}
+void getFilePath(pSensor arg)
+{
+    
+    // 使用格式化字符串作为文件名
+    char outputFileName[100];
+    snprintf(outputFileName, sizeof(outputFileName), "./data/%s/Sensor%d_%s.csv", arg->startTime, 1, arg->startTime);
+
+    FILE *outputFile = fopen("targetFileName.txt", "w");
+	if (outputFile == NULL)
+	{
+		fprintf(stderr, "targetFileName: Error opening file.\n");
+		return;
+	}
+	fprintf(outputFile, outputFileName);
+	fclose(outputFile);
+
+    printf("\nSensor %d completed!\n", arg->sensorIndex);
 }
 
 void createDir(char* dir_name){
