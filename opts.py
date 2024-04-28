@@ -12,9 +12,10 @@ parser.add_argument('--no-dynamic', dest='dynamic', action='store_false')
 parser.add_argument('--test_only', action='store_true')
 
 
-parser.add_argument('--train_label_file', default='./data/train_label_file.csv')
-parser.add_argument('--test_label_file', nargs='+',default=[])
-parser.add_argument('--val_label_file', default='./data/train_label_file.csv')
+parser.add_argument('--train_label_file', default='./data/white_cup_user1_label.csv')
+parser.add_argument('--test_label_file', default='./data/white_cup_user2_label.csv')
+parser.add_argument('--tests_label_file', nargs='+',default=[])
+parser.add_argument('--val_label_file', default='./data/white_cup_user1_label.csv')
 
 parser.add_argument('--train_label_file2', default=False)
 

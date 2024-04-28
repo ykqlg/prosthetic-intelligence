@@ -5,7 +5,7 @@ import sys
 
 from sklearn.model_selection import cross_val_score, cross_val_predict, GridSearchCV
 from sklearn.svm import SVC
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, precision_score, recall_score, f1_score
 import joblib
 import logging.config
 from logging_config import logger
@@ -85,21 +85,27 @@ def feat_method():
     myMFCC = MyMFCC(args)
 
     methods = {
-        'get_x_mfcc_feat': myMFCC.get_x_mfcc_feat,
-        'get_x_stft_feat': myMFCC.get_x_stft_feat,
-        'get_y_mfcc_feat': myMFCC.get_y_mfcc_feat,
-        'get_y_stft_feat': myMFCC.get_y_stft_feat,
+        # 'get_x_mfcc_feat': myMFCC.get_x_mfcc_feat,
+        # 'get_y_mfcc_feat': myMFCC.get_y_mfcc_feat,
+        
         'get_z_mfcc_feat': myMFCC.get_z_mfcc_feat,
+        # 'get_concat_mfcc_feat': myMFCC.get_concat_mfcc_feat,
+        # 'get_add_mfcc_feat': myMFCC.get_add_mfcc_feat,
+        # 'get_dft321_mfcc_feat': myMFCC.get_dft321_mfcc_feat,
+        
+        # 'get_x_stft_feat': myMFCC.get_x_stft_feat,
+        # 'get_y_stft_feat': myMFCC.get_y_stft_feat,
+        
         'get_z_stft_feat': myMFCC.get_z_stft_feat,
-        'get_add_mfcc_feat': myMFCC.get_add_mfcc_feat,
-        'get_add_stft_feat': myMFCC.get_add_stft_feat,
-        # 'get_concat_feat': myMFCC.get_concat_feat,
-        'get_dft321_mfcc_feat': myMFCC.get_dft321_mfcc_feat,
-        'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
-        'get_wavelet_feat': myMFCC.get_wavelet_feat
+        # 'get_concat_stft_feat': myMFCC.get_concat_stft_feat,
+        # 'get_add_stft_feat': myMFCC.get_add_stft_feat,
+        # 'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
+        
+        # 'get_wavelet_feat': myMFCC.get_wavelet_feat,
+        # 'get_dft321_wavelet_feat':myMFCC.get_dft321_wavelet_feat
     }
     results = []
-    n_components = 100
+    n_components = 300
     
     for method_name, method_func in methods.items():
 
@@ -114,33 +120,33 @@ def feat_method():
         
         start_time = time.time()
         X_train_feat = method_func(X_train)
-        # print(X_train_feat)
+        # print(X_train_feat[0])
         feat_extraction_time = (time.time() - start_time) / len_train
-        feat_extraction_time = round(feat_extraction_time*1000,3)
+        feat_extraction_time = round(feat_extraction_time*1000,2)
         feat_dim_before_pca = X_train_feat.shape[1]
         
         X_test_feat = method_func(X_test)
 
 
-        # pca_time = 0
-        dim = X_train.shape[0]
-        reduce_dim = PCA(n_components=n_components)
-        # reduce_dim = FastICA(n_components=n_components,random_state=12,max_iter=400)
-        reduce_dim.fit(X_train_feat)
-        X_combined = np.vstack((X_train_feat, X_test_feat))
-        start_time = time.time()
-        X_combined_transformed = reduce_dim.transform(X_combined)
-        pca_time = (time.time() - start_time) / (len_train+len_test)
-        pca_time = round(pca_time*1000,3)
-        X_train_feat = X_combined_transformed[:dim,:]
-        X_test_feat = X_combined_transformed[dim:,:]
+        pca_time = 0
+        # dim = X_train.shape[0]
+        # reduce_dim = PCA(n_components=n_components)
+        # # reduce_dim = FastICA(n_components=n_components,random_state=12,max_iter=400)
+        # reduce_dim.fit(X_train_feat)
+        # X_combined = np.vstack((X_train_feat, X_test_feat))
+        # start_time = time.time()
+        # X_combined_transformed = reduce_dim.transform(X_combined)
+        # pca_time = (time.time() - start_time) / (len_train+len_test)
+        # pca_time = round(pca_time*1000,2)
+        # X_train_feat = X_combined_transformed[:dim,:]
+        # X_test_feat = X_combined_transformed[dim:,:]
         
 
         # print(f"feat_dim_after:{X_train_feat.shape[1]}")
         start_time = time.time()
         model.fit(X_train_feat, y_train)
         training_time = (time.time() - start_time) / (len_train)
-        training_time = round(training_time*1000,3)
+        training_time = round(training_time*1000,2)
         
         
         # X_train_feat = myMFCC.reduce_dimension(X_train_feat)
@@ -148,51 +154,20 @@ def feat_method():
         start_time = time.time()
         y_pred = model.predict(X_test_feat)
         prediction_time = (time.time() - start_time) / len(X_test)
-        prediction_time = round(prediction_time*1000,3)
+        prediction_time = round(prediction_time*1000,2)
         
         
-        total_time = (feat_extraction_time+pca_time+training_time+prediction_time)*1000
-        total_time = round(total_time,3)
+        total_time = feat_extraction_time+pca_time+prediction_time
         cross_acc = accuracy_score(y_test, y_pred)
-        cross_acc = round(cross_acc,2)
+        cross_acc = round(cross_acc,4)*100
         feat_dim = X_train_feat.shape[1]
 
-        # single subject
-        args.test_only = False
-        rand_list = generate_random_integers(args.repeat_num,1,100)
-        acc_list = []
-        for rand in rand_list:
-            args.random_state = rand
-            dataSet = MyDataset(args)
+        print(f"#{method_name}# \n cross_acc:{cross_acc}")
+        results.append([method_name,cross_acc,feat_dim,feat_extraction_time,total_time])
+        # results.append([method_name,cross_acc,feat_dim_before_pca,feat_dim,feat_extraction_time,pca_time,training_time,total_time])
 
-            X_train, y_train = dataSet.get_train_data()
-            X_test, y_test = dataSet.get_test_data()
-            X_train_feat = method_func(X_train)
-            X_test_feat = method_func(X_test)
-
-
-            dim = X_train.shape[0]
-            reduce_dim = PCA(n_components=n_components)
-            reduce_dim.fit(X_train_feat)
-            X_combined = np.vstack((X_train_feat, X_test_feat))
-            X_combined_transformed = reduce_dim.transform(X_combined)
-            X_train_feat = X_combined_transformed[:dim,:]
-            X_test_feat = X_combined_transformed[dim:,:]
-
-
-            # print(f"feat_dim_after:{X_train_feat.shape[1]}")
-            model.fit(X_train_feat, y_train)
-            y_pred = model.predict(X_test_feat)
-            acc = accuracy_score(y_test, y_pred)
-            acc_list.append(acc)
-        
-        single_acc = np.mean(acc_list)
-        single_acc = round(single_acc,2)
-        print(f"#{method_name}# \n single_acc:{single_acc} \n cross_acc:{cross_acc}")
-        results.append([method_name, single_acc,cross_acc,feat_dim_before_pca,feat_dim,feat_extraction_time,pca_time,training_time,total_time])
-
-    df = pd.DataFrame(results, columns=['Method', 'Single Accuracy','Cross Accuracy','Previous Dimension',
-                                        'Feature Dimension','Feature Time','PCA Time','Training Time','Total Time(ms)'])
+    df = pd.DataFrame(results, columns=['特征表示方法','准确率(%)','特征维度','特征提取用时(ms)','总用时(ms)'])
+    # df = pd.DataFrame(results, columns=['特征表示方法','准确率','特征维度','特征提取用时(ms)','PCA Time','Training Time','总用时(ms)'])
     df.to_csv('results.csv', index=False)
     
     print("数据已写入 CSV 文件。")
@@ -201,21 +176,25 @@ def feat_method():
 
 def param():
     
-    param_name = 'winlen' # 必须与args的参数名严格一致
+    param_name = 'numcep' # 必须与args的参数名严格一致
     task_name = param_name+'_param_test'
-    # param_list = np.linspace(0.2, 1.5, num=30, endpoint=True) # backward
-    # param_list = np.linspace(0.02, 0.6, num=30, endpoint=True) # forward
+    # param_list = np.arange(0.2, 1.6, 0.1, dtype=float) # backward
+    
+    # param_list = np.arange(0.01, 0.16, 0.01, dtype=float) # forward
+    # param_list = np.linspace(0.01, 0.15, num=15, endpoint=True) # forward
     # param_list = [0.6,0.65, 0.7, 0.725, 0.75, 0.775, 0.8,0.9]
     # param_list = [0.6,0.7, 0.73, 0.76,0.8,0.9]
     
-    # param_list = [128,256, 512, 1024,2048] # nfft
-    param_list = np.linspace(0.025, 0.5, num=5, endpoint=True) # winlen
-    # param_list = np.linspace(5, 30, num=25) # nfilt
-    param_list = np.arange(1, 21, 2, dtype=int) # numcep
+    # param_list = [64,128,256, 512, 1024,2048] # nfft
+    # param_list = np.linspace(0.025, 0.5, num=5, endpoint=True) # winlen
+    # param_list = np.arange(1, 20, 2, dtype=int) # nfilt
+    param_list = np.arange(1, 15, 1, dtype=int) # numcep
     logger.info(f"{task_name}: {param_list}")
 
     times = []
     accuracies = []
+    
+    results = []
     
     with tqdm(total=len(param_list)) as pbar:
         for param in param_list:
@@ -233,10 +212,16 @@ def param():
             start_time = time.time()
             X_test_feat = myMFCC.get_feat(X_test)
             y_pred = model.predict(X_test_feat)
+            
             acc = accuracy_score(y_test, y_pred)
+            precision = precision_score(y_test, y_pred)
+            recall = recall_score(y_test, y_pred)
+            f1 = f1_score(y_test, y_pred)
+            results.append([param, round(acc,2),round(precision,2),round(recall,2),round(f1,2)])
+            
             end_time = time.time()
             one_sample_time = (end_time - start_time)/test_len
-            accuracies.append(round(acc,5))
+            accuracies.append(round(acc,5)*100)
             times.append(round(one_sample_time*1000,5))
 
             pbar.set_description(f'Accuracy: {acc:.4f}, {param_name}={param}')
@@ -245,13 +230,14 @@ def param():
         
     logger.info(f"accuracies: {accuracies}")
     logger.info(f"times: {times}")
+    # plt.rcParams['font.family'] = 'SimHei'  # 使用黑体字
     fig, ax1 = plt.subplots()
 
     # color = 'tab:blue'
     color = 'k'
     # ax1.set_xlabel('Param Values')
-    ax1.set_xlabel('Second(s)')
-    ax1.set_ylabel('Accuracy',color=color)
+    # ax1.set_xlabel('nfilt')
+    ax1.set_ylabel('Accuracy(%)',color=color)
     ax1.plot(param_list, accuracies, marker='s', color='tab:blue')
     ax1.tick_params(axis='y',labelcolor=color)
     
@@ -261,12 +247,17 @@ def param():
     # ax2.plot(param_list, times, marker='o', color=color)
     # ax2.tick_params(axis='y', labelcolor=color)
 
-    fig.tight_layout()
-    plt.title(task_name, pad=20)
-    plt.subplots_adjust(top=0.85)
+    # fig.tight_layout()
+    # plt.subplots_adjust(top=0.85)
     # plt.savefig('./img/backward_accuracy&time.png')
+    plt.xticks(param_list, [str(p) for p in param_list])
     plt.savefig('./img/'+task_name+'.png')
     plt.show()
+    
+    # df = pd.DataFrame(results, columns=['Value', 'Accuracy','Precision','Recall','F1-score'])
+    # df.to_csv('result_param.csv', index=False)
+    
+    # print("数据已写入 CSV 文件。")
 
     return
 
@@ -294,55 +285,98 @@ def test():
     return
 
 def diff_obj():
-    random_numbers = generate_random_integers(args.repeat_num, 1, 100,seed=41)
-    acc_list = []
-    time_list = []
-    for random_num in random_numbers:
-        args.random_state= random_num
-        dataSet = MultiDataset(args)
-        model = SVC(kernel='linear', probability=True, C=0.1)
-        X_train, y_train = dataSet.get_train_data()
-        X_test, y_test = dataSet.get_test_data()
-        myMFCC = MyMFCC(args)
+    
+    # model = SVC(kernel='linear', probability=True, C=0.1)
+    model = SVC(kernel='poly', gamma='auto' ,probability=True, C=0.1)
+    myMFCC = MyMFCC(args)
 
-        X_train_feat = myMFCC.get_feat(X_train)
-        model.fit(X_train_feat, y_train)
-        # model = joblib.load('./model/train_model.pkl')
-        # print(f"Completed Train Section")
-        test_len = X_test.shape[0]
-        start_time = time.time()
-        X_test_feat = myMFCC.get_feat(X_test)
-        y_pred = model.predict(X_test_feat)
-        y_prob = model.predict_proba(X_test_feat)[:, 1]
-        acc = accuracy_score(y_test, y_pred)
+    methods = {
+        # 'get_x_mfcc_feat': myMFCC.get_x_mfcc_feat,
+        # 'get_y_mfcc_feat': myMFCC.get_y_mfcc_feat,
+        
+        # 'get_z_mfcc_feat': myMFCC.get_z_mfcc_feat,
+        # 'get_concat_mfcc_feat': myMFCC.get_concat_mfcc_feat,
+        # 'get_add_mfcc_feat': myMFCC.get_add_mfcc_feat,
+        # 'get_dft321_mfcc_feat': myMFCC.get_dft321_mfcc_feat,
+        
+        # 'get_x_stft_feat': myMFCC.get_x_stft_feat,
+        # 'get_y_stft_feat': myMFCC.get_y_stft_feat,
+        
+        # 'get_z_stft_feat': myMFCC.get_z_stft_feat,
+        # 'get_concat_stft_feat': myMFCC.get_concat_stft_feat,
+        'get_add_stft_feat': myMFCC.get_add_stft_feat,
+        'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
+        
+        # 'get_wavelet_feat': myMFCC.get_wavelet_feat,
+        # 'get_dft321_wavelet_feat':myMFCC.get_dft321_wavelet_feat
+    }
+    results = []
+    n_components = 100
+    accuracy_list = []
+    for method_name, method_func in methods.items():
+        rand_list = generate_random_integers(args.repeat_num,1,100,seed=41)
+        # rand_list = generate_random_integers(1,1,100,seed=41)
+        acc_list = []
+        for rand in rand_list:
+            args.random_state = rand
+            dataSet = MultiDataset(args)
 
-        end_time = time.time()
-        one_sample_time = (end_time - start_time)/test_len
-        time_list.append(one_sample_time)
-        acc_list.append(acc)
+            X_train, y_train = dataSet.get_train_data()
+            X_test, y_test = dataSet.get_test_data()
+            X_train_feat = method_func(X_train)
+            X_test_feat = method_func(X_test)
+            # print(f"train.shape:{X_train.shape}")
+            # print(f"test.shape:{X_test.shape}")
+            
 
-    mean_acc= round(np.mean(acc_list),5)
-    mean_time = round(np.mean(time_list)*1000,5)
+
+            # dim = X_train.shape[0]
+            # reduce_dim = PCA(n_components=n_components)
+            # reduce_dim.fit(X_train_feat)
+            # X_combined = np.vstack((X_train_feat, X_test_feat))
+            # X_combined_transformed = reduce_dim.transform(X_combined)
+            # X_train_feat = X_combined_transformed[:dim,:]
+            # X_test_feat = X_combined_transformed[dim:,:]
+
+
+            # print(f"feat_dim_after:{X_train_feat.shape[1]}")
+            model.fit(X_train_feat, y_train)
+            y_pred = model.predict(X_test_feat)
+            acc = accuracy_score(y_test, y_pred)
+            acc_list.append(acc)
+        
+        accuracy = round(np.mean(acc_list)*100,2)
+        # accuracy_list.append(accuracy)
+        # accuracy_list.insert(0, method_name)
 
     
-    print(f"acc: {mean_acc}  time: {mean_time}")
-    # visualize_evaluation(y_test, y_prob, y_pred, save_dir='./img')
+        print(f"#{method_name}# \n Accuracy: {accuracy} \n")
+        # print(f"{len(accuracy_list)}")
+        results.append([method_name,accuracy])
+
+    # df = pd.DataFrame(results, columns=['Method', 'yellow_cup','white_cup_user2','box','velcro','badminton','ping_pong','toilet_roll'])
+    df = pd.DataFrame(results, columns=['Method', 'Accuracy'])
+    df.to_csv('results_diff_obj.csv', index=False)
+    
+    print("数据已写入 CSV 文件。")
     
     return
 
+
 def diff_obj_param():
     
-    param_name = 'backward' # 必须与args的参数名严格一致
-    task_name = param_name+'_param_test'
-    param_list = np.linspace(0.4, 1.5, num=15, endpoint=True) # backward
+    param_name = 'nfilt' # 必须与args的参数名严格一致
+    task_name = param_name+'_param_test_diff'
+    # param_list = np.linspace(0.4, 1.5, num=15, endpoint=True) # backward
     # param_list = np.linspace(0.02, 0.6, num=30, endpoint=True) # forward
     # param_list = [0.6,0.65, 0.7, 0.725, 0.75, 0.775, 0.8,0.9]
     # param_list = [0.6,0.7, 0.73, 0.76,0.8,0.9]
     
-    # param_list = [128,256, 512, 1024,2048] # nfft
+    # param_list = [64,128,256, 512, 1024,2048] # nfft
     # param_list = np.linspace(0.025, 0.5, num=5, endpoint=True) # winlen
-    # param_list = np.linspace(5, 30, num=25) # nfilt
-    # param_list = np.arange(1, 21, 2, dtype=int) # numcep
+    param_list = np.arange(1, 20, 1, dtype=int) # nfilt
+    
+    # param_list = np.arange(1, 17, 2, dtype=int) # numcep
     logger.info(f"{task_name}: {param_list}")
 
     times = []
@@ -378,7 +412,7 @@ def diff_obj_param():
                 time_list.append(one_sample_time)
                 acc_list.append(acc)
 
-            mean_acc= round(np.mean(acc_list),5)
+            mean_acc= round(np.mean(acc_list)*100,2)
             mean_time = round(np.mean(time_list)*1000,5)
             accuracies.append(mean_acc)
             times.append(mean_time)
@@ -394,8 +428,7 @@ def diff_obj_param():
     # color = 'tab:blue'
     color = 'k'
     # ax1.set_xlabel('Param Values')
-    ax1.set_xlabel('Second(s)')
-    ax1.set_ylabel('Accuracy',color=color)
+    ax1.set_ylabel('Accuracy(%)',color=color)
     ax1.plot(param_list, accuracies, marker='s', color='tab:blue')
     ax1.tick_params(axis='y',labelcolor=color)
     
@@ -410,63 +443,93 @@ def diff_obj_param():
     plt.subplots_adjust(top=0.85)
     # plt.savefig('./img/backward_accuracy&time.png')
     plt.savefig('./img/'+task_name+'.png')
-    plt.show()
+    # plt.show()
 
     return
+
 def svm_grid_search():
     # 加载数据集
     myMFCC = MyMFCC(args)
 
-    dataSet = MultiDataset(args)
-    X_train, y_train = dataSet.get_single_train_data()
-    X_test, y_test = dataSet.get_single_val_data()
-    # 定义SVM模型
-    model = SVC()
-
-    # 定义参数网格
-    param_grid = {
-        'C': [0.1, 1, 10, 100],
-        'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
-        'gamma': ['scale', 'auto']
+    methods = {
+        # 'get_x_mfcc_feat': myMFCC.get_x_mfcc_feat,
+        # 'get_x_stft_feat': myMFCC.get_x_stft_feat,
+        # 'get_y_mfcc_feat': myMFCC.get_y_mfcc_feat,
+        # 'get_y_stft_feat': myMFCC.get_y_stft_feat,
+        'get_z_mfcc_feat': myMFCC.get_z_mfcc_feat,
+        # 'get_z_stft_feat': myMFCC.get_z_stft_feat,
+        # 'get_add_mfcc_feat': myMFCC.get_add_mfcc_feat,
+        # 'get_add_stft_feat': myMFCC.get_add_stft_feat,
+        # 'get_concat_mfcc_feat': myMFCC.get_concat_mfcc_feat,
+        # 'get_concat_stft_feat': myMFCC.get_concat_stft_feat,
+        # 'get_dft321_mfcc_feat': myMFCC.get_dft321_mfcc_feat,
+        # 'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
+        # 'get_wavelet_feat': myMFCC.get_wavelet_feat,
+        # 'get_dft321_wavelet_feat':myMFCC.get_dft321_wavelet_feat
     }
+    results = []
+    n_components = 100
+    accuracy_list = []
+    # dataSet = MyDataset(args)
+    dataSet = MultiDataset(args)
+    
+    for method_name, method_func in methods.items():
+        
 
-    # 使用GridSearchCV进行网格搜索
-    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
-    X_train_feat = myMFCC.get_feat(X_train)
-    grid_search.fit(X_train_feat, y_train)
+        X_train, y_train = dataSet.get_train_data()
+        X_test, y_test = dataSet.get_test_data()
+        X_train_feat = method_func(X_train)
+        X_test_feat = method_func(X_test)
+        model = SVC()
+        # param_grid = {
+        #     'C': [0.1, 1, 10, 100],
+        #     'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
+        #     'gamma': ['scale', 'auto']
+        # }
+        param_grid = {
+            'C': [0.1],
+            'kernel': ['poly'],
+            'gamma': ['auto']
+        }
 
-    # 输出最佳参数和对应的准确率
-    print("Best parameters found: ", grid_search.best_params_)
-    print("Best accuracy found: ", grid_search.best_score_)
+        # 使用GridSearchCV进行网格搜索
+        grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
+        grid_search.fit(X_train_feat, y_train)
+        best_params = grid_search.best_params_
+        best_score = grid_search.best_params_
+        # 输出最佳参数和对应的准确率
+        print("Best parameters found: ", grid_search.best_params_)
+        print("Best accuracy found: ", grid_search.best_score_)
 
-    # 在测试集上评估模型性能
-    best_model = grid_search.best_estimator_
-    X_test_feat = myMFCC.get_feat(X_test)
+        # 在测试集上评估模型性能
+        best_model = grid_search.best_estimator_
 
-    test_accuracy = best_model.score(X_test_feat, y_test)
-    print("Test accuracy: ", test_accuracy)
+        test_accuracy = best_model.score(X_test_feat, y_test)
+        print("Test accuracy: ", test_accuracy)
+        results.append([method_name,best_params,best_score,test_accuracy])
+
+        
+        
+        
+
+    # df = pd.DataFrame(results, columns=['Method', 'yellow_cup','white_cup_user2','box','velcro','badminton','ping_pong','toilet_roll'])
+    df = pd.DataFrame(results, columns=['Method', 'Best Params','Best Score','Test Accuracy'])
+    df.to_csv('results_svm_grid_search.csv', index=False)
+    
+    print("数据已写入 CSV 文件。")
+    
+    return
 
 
 
 if __name__ == "__main__":
     logger.debug("Arguments: %s", sys.argv[1:])
 
-    # if args.test_only:
-    #     test()
-    # else:
-    #     acc = main()
-    #     logger.info(f"acc : {acc}")
-
-
-    # svm_gridsearch()
-
     # param() # ./test.sh
     # diff_obj_param()
-
+    
     # feat_method()
-
     # svm_grid_search()
-
+    
     # test()
-
     diff_obj()

@@ -117,7 +117,7 @@ class MultiDataset:
         self.test_X.append(X_test)
         self.test_y.append(y_test)
 
-        for file in self.args.test_label_file:
+        for file in self.args.tests_label_file:
             # check_dataset(file)
             df = pd.read_csv(file)
             filePaths = df['FilePath'].values
