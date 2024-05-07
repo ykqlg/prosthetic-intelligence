@@ -29,7 +29,7 @@
 
 #define Sensor_ADDRESS 0x19
 #define BUFFER_SIZE 6 // (原来是126 = 6字节 x 21)
-#define GSCALE 0.001952 
+#define GSCALE 0.001952*1000
 #define SENSOR_NUM 1   // 传感器个数
 int sampleNum = 16000; // 采样数
 
@@ -106,39 +106,21 @@ void initSensors(pSensor sensorPointer)
     char formattedTime[100];
     strftime(formattedTime, sizeof(formattedTime), "%Y%m%d-%H%M%S", localTime);
 
-    // 使用格式化字符串作为文件名
-    char outputFolderName[100];
-    snprintf(outputFolderName, sizeof(outputFolderName), "./data/%s",formattedTime);
+    int i = 1; // Only use index finger
+    snprintf((sensorPointer )->startTime, sizeof((sensorPointer)->startTime), "%s",formattedTime);
 
-    struct stat info;
-    if (stat(outputFolderName, &info) != 0 || !S_ISDIR(info.st_mode)) {
-        // 如果文件夹不存在，则创建文件夹
-        if (mkdir(outputFolderName, 0777) != 0) {
-            perror("Failed to create directory");
-            exit(EXIT_FAILURE);
-        }
-        printf("Directory created successfully.\n");
-    } else {
-        printf("Directory already exists.\n");
+    // 每个传感器有自己的编号
+    (sensorPointer)->sensorIndex = i;
+    // 检查每个 I2C 设备是否成功打开
+    char i2cPattern[16];
+    snprintf(i2cPattern, sizeof(i2cPattern), "/dev/i2c-%d", i);
+    (sensorPointer)->i2cFile = open(i2cPattern, O_RDWR);
+    if ((sensorPointer)->i2cFile == -1)
+    {
+        printf("Failed to open /dev/i2c-%d\n", i);
+        exit(EXIT_FAILURE);
     }
     
-
-    for (int i = 0; i < 1; i++) // 改动了
-    {
-        // 每个传感器有自己的编号
-        (sensorPointer + i)->sensorIndex = i;
-        // 检查每个 I2C 设备是否成功打开
-        char i2cPattern[16];
-        snprintf(i2cPattern, sizeof(i2cPattern), "/dev/i2c-%d", i);
-        (sensorPointer + i)->i2cFile = open(i2cPattern, O_RDWR);
-        if ((sensorPointer + i)->i2cFile == -1)
-        {
-            printf("Failed to open /dev/i2c-%d\n", i);
-            exit(EXIT_FAILURE);
-        }
-        
-        strcpy((sensorPointer + i)->startTime, formattedTime);
-    }
 }
 
 // 函数功能：向某个i2c设备的某个寄存器写入数据
@@ -254,11 +236,23 @@ float read_dataZ(pSensor arg)
     //         printf("Read successfully!\n");
     //     }
     // }
-    if (readRegOneByte(arg->i2cFile, STATUS) & 1 == 1){
-        initializeByteStreaming(arg, OUT_X_L, BUFFER_SIZE); // 读取数据到buffer中
-        u_int16_t OUT_Z = (u_int16_t)arg->msgBuffer[5] << 8 | arg->msgBuffer[4];
-        dataZ = (twoComplement16bit(OUT_Z)>> 2) * GSCALE;
+    int count = 0;
+    while(1) // 只要还有数据没有读取完，就继续读
+    {
+        if (readRegOneByte(arg->i2cFile, STATUS) & 1 == 1) {
+            initializeByteStreaming(arg, OUT_X_L, BUFFER_SIZE); // 读取数据到buffer中
+            u_int16_t OUT_Z = (u_int16_t)arg->msgBuffer[5] << 8 | arg->msgBuffer[4];
+            dataZ = (twoComplement16bit(OUT_Z)>> 2) * GSCALE;
+            // printf("%f\n",dataZ);
+            break;
+        }
     }
+    // if (readRegOneByte(arg->i2cFile, STATUS) & 1 == 1) {
+    //     initializeByteStreaming(arg, OUT_X_L, BUFFER_SIZE); // 读取数据到buffer中
+    //     u_int16_t OUT_Z = (u_int16_t)arg->msgBuffer[5] << 8 | arg->msgBuffer[4];
+    //     dataZ = (twoComplement16bit(OUT_Z)>> 2) * GSCALE;
+    //     printf("hi");
+    // }
     return dataZ;
 }
 // 初始化设置

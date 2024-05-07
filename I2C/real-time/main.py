@@ -18,25 +18,6 @@ import mylib_py as lib
 import ctypes
 import struct
 import time
-DEBUG_MOD = 0  # 调试模式开关，调试模式将打印传感器配置详细信息
-
-WHO_AM_I = 0x0F
-CTRL1 = 0x20
-CTRL2 = 0x21
-FIFO_CTRL = 0x2E
-CTRL6 = 0x25
-STATUS = 0x27  # 状态寄存器，当最低位为1时，表示有新的数据产生
-OUT_X_L = 0x28
-OUT_X_H = 0x29
-OUT_Y_L = 0x2A
-OUT_Y_H = 0x2B
-OUT_Z_L = 0x2C
-OUT_Z_H = 0x2D
-
-Sensor_ADDRESS = 0x19
-BUFFER_SIZE = 6  # (原来是126 = 6字节 x 21)
-
-SENSOR_NUM = 4   # 传感器个数
 sampleNum = 16000  # 采样数
 
 def butter_lowpass_filter(data, cutoff, fs, order=5):
@@ -106,22 +87,11 @@ def main_c():
 
     
 def main():
-    if sys.gettrace() is not None:
-        print("Debug mode is enabled.")
-        filling = 205
-        steady = 115
-        after_peak = 205
-    else:
-        print("Debug mode is disabled.")
-        filling = 25500
-        steady = 21500
-        after_peak = 27000
 
-  
-    buf_size = 100000
+    buf_size = 20000
     window_size = 1000 # 这个就是before_length???
-    forward = 0.45
-    backward = 0.75
+    forward = 0.02
+    backward = 0.8
     fs = 1330
     before_length = int(forward*fs)
     after_length = int(backward*fs)
@@ -140,20 +110,18 @@ def main():
     start_time = time.time()
     while True and p < buf_size:
         if p >= window_size:
-            for i in range(steady):
-                pass
+            
             accel_z = lib.read_dataZ(sensor_info_ptr)
             buf[0,p] = accel_z
             buf[1,p] = time.time()-start_time
-
+            p += 1
             filtered_window = filter_window(buf[0,p - window_size:p], fs) # 这个window_size改成before_length试试看
             peaks = detect_peaks(filtered_window)
+
             if peaks.size > 0:
 
                 index = p - window_size + peaks[0]
                 for j in range(after_length):
-                    for k in range(after_peak):
-                        pass
                     accel_z = lib.read_dataZ(sensor_info_ptr)
                     buf[0,j+p] = accel_z
                     buf[1,j+p] = time.time()-start_time
@@ -165,7 +133,7 @@ def main():
                 # print(f"steady: {1/np.mean(np.diff(buf[1,start_index:index]))}")
                 # print(f"after_peak: {1/np.mean(np.diff(buf[1,index:end_index]))}")
 
-                feat = mfcc(target_data[0], 1330, winstep=0.01).reshape(1, -1)
+                feat = mfcc(target_data[0], fs,numcep=10,nfilt=11,nfft=256).reshape(1, -1)
                 label = svm_model.predict(feat)[0]
                 confidence = svm_model.predict_proba(feat)[0]
                 print(f"Label: {label}, Confidence: {confidence[label]}")
@@ -176,15 +144,14 @@ def main():
                 p = 0
                 buf = np.zeros((2,buf_size))
         else:
-            for i in range(filling):
-                pass
             accel_z = lib.read_dataZ(sensor_info_ptr)
+
             buf[0,p] = accel_z
             buf[1,p] = time.time()-start_time
 
             p += 1
-            
-    plt.plot(buf[1,:],buf[0,:])
+    print("Completed!(Buffer exceeded)")
+    plt.plot(buf[1,:p],buf[0,:p])
     plt.show()
 
 if __name__ == "__main__":

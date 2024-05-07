@@ -59,12 +59,12 @@ initSensors = mylib.initSensors
 initSensors.argtypes = [pSensor]
 initSensors.restype = None
 
-# read_dataZ = mylib.read_dataZ
-# read_dataZ.argtypes = [pSensor]
-# read_dataZ.restype = ctypes.c_float
+read_dataZ = mylib.read_dataZ
+read_dataZ.argtypes = [pSensor]
+read_dataZ.restype = ctypes.c_float
 
-read_data = mylib.read_data
-read_data.argtypes = [pSensor,ctypes.POINTER(ctypes.c_float)]
-read_data.restype = None
+# read_data = mylib.read_data
+# read_data.argtypes = [pSensor,ctypes.POINTER(ctypes.c_float)]
+# read_data.restype = None
 
 
