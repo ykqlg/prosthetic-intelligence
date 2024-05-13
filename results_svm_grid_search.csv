@@ -1,0 +1,2 @@
+Method,Best Params,Best Score,Test Accuracy
+get_z_mfcc_feat,"{'C': 0.1, 'gamma': 'scale', 'kernel': 'poly'}","{'C': 0.1, 'gamma': 'scale', 'kernel': 'poly'}",0.8733333333333333
