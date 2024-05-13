@@ -5,7 +5,7 @@ import sys
 
 from sklearn.model_selection import cross_val_score, cross_val_predict, GridSearchCV
 from sklearn.svm import SVC
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, precision_score, recall_score, f1_score,make_scorer
 import joblib
 import logging.config
 from logging_config import logger
@@ -88,7 +88,7 @@ def feat_method():
         # 'get_x_mfcc_feat': myMFCC.get_x_mfcc_feat,
         # 'get_y_mfcc_feat': myMFCC.get_y_mfcc_feat,
         
-        'get_z_mfcc_feat': myMFCC.get_z_mfcc_feat,
+        # 'get_z_mfcc_feat': myMFCC.get_z_mfcc_feat,
         # 'get_concat_mfcc_feat': myMFCC.get_concat_mfcc_feat,
         # 'get_add_mfcc_feat': myMFCC.get_add_mfcc_feat,
         # 'get_dft321_mfcc_feat': myMFCC.get_dft321_mfcc_feat,
@@ -96,12 +96,12 @@ def feat_method():
         # 'get_x_stft_feat': myMFCC.get_x_stft_feat,
         # 'get_y_stft_feat': myMFCC.get_y_stft_feat,
         
-        'get_z_stft_feat': myMFCC.get_z_stft_feat,
+        # 'get_z_stft_feat': myMFCC.get_z_stft_feat,
         # 'get_concat_stft_feat': myMFCC.get_concat_stft_feat,
         # 'get_add_stft_feat': myMFCC.get_add_stft_feat,
         # 'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
         
-        # 'get_wavelet_feat': myMFCC.get_wavelet_feat,
+        'get_wavelet_feat': myMFCC.get_wavelet_feat,
         # 'get_dft321_wavelet_feat':myMFCC.get_dft321_wavelet_feat
     }
     results = []
@@ -158,15 +158,18 @@ def feat_method():
         
         
         total_time = feat_extraction_time+pca_time+prediction_time
-        cross_acc = accuracy_score(y_test, y_pred)
-        cross_acc = round(cross_acc,4)*100
+        total_time = round(total_time,2)
+        acc = accuracy_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred)
+        acc = round(acc,4)*100
+        f1 = round(f1,4)*100
         feat_dim = X_train_feat.shape[1]
 
-        print(f"#{method_name}# \n cross_acc:{cross_acc}")
-        results.append([method_name,cross_acc,feat_dim,feat_extraction_time,total_time])
+        print(f"#{method_name}# \n acc:{acc} f1:{f1}")
+        results.append([method_name,acc,f1,feat_dim,feat_extraction_time,total_time])
         # results.append([method_name,cross_acc,feat_dim_before_pca,feat_dim,feat_extraction_time,pca_time,training_time,total_time])
 
-    df = pd.DataFrame(results, columns=['特征表示方法','准确率(%)','特征维度','特征提取用时(ms)','总用时(ms)'])
+    df = pd.DataFrame(results, columns=['特征表示方法','Acc(%)','F1(%)','特征维度','特征提取用时(ms)','总用时(ms)'])
     # df = pd.DataFrame(results, columns=['特征表示方法','准确率','特征维度','特征提取用时(ms)','PCA Time','Training Time','总用时(ms)'])
     df.to_csv('results.csv', index=False)
     
@@ -176,23 +179,21 @@ def feat_method():
 
 def param():
     
-    param_name = 'numcep' # 必须与args的参数名严格一致
+    param_name = 'forward' # 必须与args的参数名严格一致
     task_name = param_name+'_param_test'
-    # param_list = np.arange(0.2, 1.6, 0.1, dtype=float) # backward
-    
-    # param_list = np.arange(0.01, 0.16, 0.01, dtype=float) # forward
-    # param_list = np.linspace(0.01, 0.15, num=15, endpoint=True) # forward
-    # param_list = [0.6,0.65, 0.7, 0.725, 0.75, 0.775, 0.8,0.9]
-    # param_list = [0.6,0.7, 0.73, 0.76,0.8,0.9]
+
+    # param_list = np.arange(0.2, 1.3, 0.1, dtype=float) # backward
+    param_list = np.arange(0.01, 0.13, 0.01, dtype=float) # forward
+    # param_list = np.arange(1, 20, 2, dtype=int) # nfilt
+    # param_list = np.arange(1, 13, 1, dtype=int) # numcep
     
     # param_list = [64,128,256, 512, 1024,2048] # nfft
     # param_list = np.linspace(0.025, 0.5, num=5, endpoint=True) # winlen
-    # param_list = np.arange(1, 20, 2, dtype=int) # nfilt
-    param_list = np.arange(1, 15, 1, dtype=int) # numcep
     logger.info(f"{task_name}: {param_list}")
 
     times = []
     accuracies = []
+    f1scores = []
     
     results = []
     
@@ -222,6 +223,7 @@ def param():
             end_time = time.time()
             one_sample_time = (end_time - start_time)/test_len
             accuracies.append(round(acc,5)*100)
+            f1scores.append(round(f1,5)*100)
             times.append(round(one_sample_time*1000,5))
 
             pbar.set_description(f'Accuracy: {acc:.4f}, {param_name}={param}')
@@ -231,26 +233,30 @@ def param():
     logger.info(f"accuracies: {accuracies}")
     logger.info(f"times: {times}")
     # plt.rcParams['font.family'] = 'SimHei'  # 使用黑体字
-    fig, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots(dpi=300)
 
     # color = 'tab:blue'
     color = 'k'
     # ax1.set_xlabel('Param Values')
-    # ax1.set_xlabel('nfilt')
-    ax1.set_ylabel('Accuracy(%)',color=color)
-    ax1.plot(param_list, accuracies, marker='s', color='tab:blue')
+    # ax1.set_xlabel('Left Length of base point')
+    ax1.set_xlabel('Right Length of base point')
+    # ax1.set_xlabel('Number of filters')
+    # ax1.set_xlabel('Number of cepstrum')
+    ax1.set_ylabel('F1-score (%)',color=color)
+    ax1.plot(param_list, f1scores, marker='s', color='tab:blue')
     ax1.tick_params(axis='y',labelcolor=color)
     
     # color = 'tab:red'
     # ax2 = ax1.twinx()
-    # ax2.set_ylabel('Time (ms)', color=color)
-    # ax2.plot(param_list, times, marker='o', color=color)
+    # ax2.set_ylabel('F1-score(%)', color=color)
+    # ax2.plot(param_list, f1scores, marker='o', color=color)
     # ax2.tick_params(axis='y', labelcolor=color)
 
-    # fig.tight_layout()
+    fig.tight_layout()
     # plt.subplots_adjust(top=0.85)
     # plt.savefig('./img/backward_accuracy&time.png')
-    plt.xticks(param_list, [str(p) for p in param_list])
+    
+    # plt.xticks(param_list, [str(p) for p in param_list])
     plt.savefig('./img/'+task_name+'.png')
     plt.show()
     
@@ -288,6 +294,9 @@ def diff_obj():
     
     # model = SVC(kernel='linear', probability=True, C=0.1)
     model = SVC(kernel='poly', gamma='auto' ,probability=True, C=0.1)
+    
+    
+    # model = SVC(kernel='rbf', gamma='scale' ,probability=True, C=1)
     myMFCC = MyMFCC(args)
 
     methods = {
@@ -302,9 +311,9 @@ def diff_obj():
         # 'get_x_stft_feat': myMFCC.get_x_stft_feat,
         # 'get_y_stft_feat': myMFCC.get_y_stft_feat,
         
-        # 'get_z_stft_feat': myMFCC.get_z_stft_feat,
-        # 'get_concat_stft_feat': myMFCC.get_concat_stft_feat,
-        'get_add_stft_feat': myMFCC.get_add_stft_feat,
+        'get_z_stft_feat': myMFCC.get_z_stft_feat,
+        'get_concat_stft_feat': myMFCC.get_concat_stft_feat,
+        # 'get_add_stft_feat': myMFCC.get_add_stft_feat,
         'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
         
         # 'get_wavelet_feat': myMFCC.get_wavelet_feat,
@@ -312,11 +321,11 @@ def diff_obj():
     }
     results = []
     n_components = 100
-    accuracy_list = []
     for method_name, method_func in methods.items():
         rand_list = generate_random_integers(args.repeat_num,1,100,seed=41)
         # rand_list = generate_random_integers(1,1,100,seed=41)
         acc_list = []
+        f1_list = []
         for rand in rand_list:
             args.random_state = rand
             dataSet = MultiDataset(args)
@@ -343,19 +352,22 @@ def diff_obj():
             model.fit(X_train_feat, y_train)
             y_pred = model.predict(X_test_feat)
             acc = accuracy_score(y_test, y_pred)
+            f1 = f1_score(y_test, y_pred)
             acc_list.append(acc)
+            f1_list.append(f1)
         
         accuracy = round(np.mean(acc_list)*100,2)
+        f1score = round(np.mean(f1_list)*100,2)
         # accuracy_list.append(accuracy)
         # accuracy_list.insert(0, method_name)
 
     
-        print(f"#{method_name}# \n Accuracy: {accuracy} \n")
+        print(f"#{method_name}# \n Accuracy: {accuracy} F1-score: {f1score}\n")
         # print(f"{len(accuracy_list)}")
-        results.append([method_name,accuracy])
+        results.append([method_name,accuracy,f1score])
 
     # df = pd.DataFrame(results, columns=['Method', 'yellow_cup','white_cup_user2','box','velcro','badminton','ping_pong','toilet_roll'])
-    df = pd.DataFrame(results, columns=['Method', 'Accuracy'])
+    df = pd.DataFrame(results, columns=['Method', 'Accuracy','F1-score'])
     df.to_csv('results_diff_obj.csv', index=False)
     
     print("数据已写入 CSV 文件。")
@@ -374,7 +386,7 @@ def diff_obj_param():
     
     # param_list = [64,128,256, 512, 1024,2048] # nfft
     # param_list = np.linspace(0.025, 0.5, num=5, endpoint=True) # winlen
-    param_list = np.arange(1, 20, 1, dtype=int) # nfilt
+    param_list = np.arange(1, 20, 2, dtype=int) # nfilt
     
     # param_list = np.arange(1, 17, 2, dtype=int) # numcep
     logger.info(f"{task_name}: {param_list}")
@@ -405,7 +417,8 @@ def diff_obj_param():
                 X_test_feat = myMFCC.get_feat(X_test)
                 y_pred = model.predict(X_test_feat)
                 y_prob = model.predict_proba(X_test_feat)[:, 1]
-                acc = accuracy_score(y_test, y_pred)
+                # acc = accuracy_score(y_test, y_pred)
+                acc = f1_score(y_test, y_pred)
 
                 end_time = time.time()
                 one_sample_time = (end_time - start_time)/test_len
@@ -423,12 +436,12 @@ def diff_obj_param():
         
     logger.info(f"accuracies: {accuracies}")
     logger.info(f"times: {times}")
-    fig, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots(dpi=300)
 
     # color = 'tab:blue'
     color = 'k'
-    # ax1.set_xlabel('Param Values')
-    ax1.set_ylabel('Accuracy(%)',color=color)
+    ax1.set_xlabel('Number of filters')
+    ax1.set_ylabel('F1-score(%)',color=color)
     ax1.plot(param_list, accuracies, marker='s', color='tab:blue')
     ax1.tick_params(axis='y',labelcolor=color)
     
@@ -439,9 +452,11 @@ def diff_obj_param():
     # ax2.tick_params(axis='y', labelcolor=color)
 
     fig.tight_layout()
-    plt.title(task_name, pad=20)
-    plt.subplots_adjust(top=0.85)
+    # plt.title(task_name, pad=20)
+    # plt.subplots_adjust(top=0.85)
     # plt.savefig('./img/backward_accuracy&time.png')
+    plt.xticks(param_list, [str(p) for p in param_list])
+    
     plt.savefig('./img/'+task_name+'.png')
     # plt.show()
 
@@ -480,20 +495,21 @@ def svm_grid_search():
         X_test, y_test = dataSet.get_test_data()
         X_train_feat = method_func(X_train)
         X_test_feat = method_func(X_test)
+        f1_scorer = make_scorer(f1_score)
         model = SVC()
-        # param_grid = {
-        #     'C': [0.1, 1, 10, 100],
-        #     'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
-        #     'gamma': ['scale', 'auto']
-        # }
         param_grid = {
-            'C': [0.1],
-            'kernel': ['poly'],
-            'gamma': ['auto']
+            'C': [0.1, 1, 10, 100],
+            'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
+            'gamma': ['scale', 'auto']
         }
+        # param_grid = {
+        #     'C': [0.1],
+        #     'kernel': ['poly'],
+        #     'gamma': ['auto']
+        # }
 
         # 使用GridSearchCV进行网格搜索
-        grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
+        grid_search = GridSearchCV(estimator=model, param_grid=param_grid,scoring=f1_scorer, cv=5, n_jobs=-1, verbose=2)
         grid_search.fit(X_train_feat, y_train)
         best_params = grid_search.best_params_
         best_score = grid_search.best_params_
@@ -509,10 +525,7 @@ def svm_grid_search():
         results.append([method_name,best_params,best_score,test_accuracy])
 
         
-        
-        
-
-    # df = pd.DataFrame(results, columns=['Method', 'yellow_cup','white_cup_user2','box','velcro','badminton','ping_pong','toilet_roll'])
+    
     df = pd.DataFrame(results, columns=['Method', 'Best Params','Best Score','Test Accuracy'])
     df.to_csv('results_svm_grid_search.csv', index=False)
     
@@ -520,16 +533,20 @@ def svm_grid_search():
     
     return
 
-
-
 if __name__ == "__main__":
     logger.debug("Arguments: %s", sys.argv[1:])
+    
+    # plt.rcParams['font.sans-serif'] = ['Verdana']
+    plt.rc('font', size=11, family='DejaVu Sans') # 'Tahoma', 'DejaVu Sans', 'Verdana'"
+    plt.rc('axes', edgecolor='k', linewidth=0.75, labelcolor='k')
 
+    # main()
+    
     # param() # ./test.sh
     # diff_obj_param()
     
-    # feat_method()
+    feat_method()
     # svm_grid_search()
     
     # test()
-    diff_obj()
+    # diff_obj()

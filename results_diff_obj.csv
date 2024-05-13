@@ -1,9 +1,4 @@
-Method,Accuracy
-get_z_mfcc_feat,89.07
-get_concat_mfcc_feat,91.53
-get_add_mfcc_feat,83.87
-get_dft321_mfcc_feat,74.93
-get_z_stft_feat,75.4
-get_concat_stft_feat,72.47
-get_add_stft_feat,68.0
-get_dft321_stft_feat,69.93
+Method,Accuracy,F1-score
+get_z_stft_feat,73.33,74.83
+get_concat_stft_feat,79.13,80.48
+get_dft321_stft_feat,61.73,62.49

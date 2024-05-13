@@ -1,13 +1,13 @@
 import numpy as np
 from python_speech_features import mfcc,delta
 import scipy.signal
-from scipy.signal import cwt, morlet
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FastICA 
 from sklearn.manifold import TSNE
 from dataset import butter_highpass_filter,butter_lowpass_filter
-from scipy.signal import stft
+from scipy.signal import stft,cwt, morlet
+import pywt
 
 def DFT321f(u):
     # u: n x 3 array
@@ -159,7 +159,6 @@ class MyMFCC:
     def get_z_mfcc_feat(self, dataSet):
         return self.single_axis_mfcc_feat(dataSet,2)
 
-
     def single_axis_stft_feat(self,dataSet,axis):
         feat_list = []
 
@@ -186,8 +185,6 @@ class MyMFCC:
 
     def get_z_stft_feat(self, dataSet):
         return self.single_axis_stft_feat(dataSet,2)
-
-
 
     def get_add_mfcc_feat(self, dataSet):
         feat_list = []
@@ -217,6 +214,7 @@ class MyMFCC:
 
         feat = np.array(feat_list)
         return feat
+    
     def get_dft321_mfcc_feat(self, dataSet):
         feat_list = []
 
@@ -234,8 +232,6 @@ class MyMFCC:
         feat = np.array(feat_list)
         # print(f"{feat.shape}")
         return feat
-    
-    
 
     def get_dft321_stft_feat(self, dataSet):
         feat_list = []
@@ -257,16 +253,29 @@ class MyMFCC:
     
     def get_wavelet_feat(self,dataSet):
         feat_list = []
-        scales = np.arange(1, 2)
+        scales = np.arange(1, 3)
         # print(f"original signal's dimension: {dataSet[:,2].shape}")
         
         for i in range(dataSet.shape[0]):
             signal = dataSet[i, 2]
-            coefficients = cwt(signal, morlet, scales)
-            coefficients_flat = np.abs(coefficients).reshape(-1)
+            level = 3
+
+            # 执行DWT
+            coeffs = pywt.wavedec(signal, 'haar', level=level)
+            approx_coeffs = coeffs[0]
+            detail_coeffs = coeffs[1:]
+            # print(detail_coeffs.shape)
+            # a= np.array(detail_coeffs)
+            # print(a.shape)
+            
+            
+            # coefficients = cwt(signal, morlet, scales)
+            coefficients_flat = np.concatenate(detail_coeffs).ravel()
+            # coefficients_flat = np.abs(detail_coeffs).ravel()
+            
             feat_list.append(coefficients_flat)
         feat = np.array(feat_list)
-        # print(f"dimension: {feat.shape[1]}")
+        print(f"dimension: {feat.shape}")
         
         return feat
     def get_dft321_wavelet_feat(self,dataSet):

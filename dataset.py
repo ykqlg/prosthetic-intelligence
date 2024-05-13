@@ -134,10 +134,9 @@ class MultiDataset:
         self.train_y = np.concatenate(self.train_y)
         self.test_X = np.concatenate(self.test_X)
         self.test_y = np.concatenate(self.test_y)
-        # self.train_X = pd.concat(self.train_X)
-        # self.train_y = pd.concat(self.train_y)
-        # self.test_X = pd.concat(self.test_X)
-        # self.test_y = pd.concat(self.test_y)
+        
+        
+   
 
     def get_single_train_data(self):
         # 原始纸杯数据作为训练集
@@ -159,6 +158,7 @@ class MultiDataset:
         X= self.pre_process(filePaths)
 
         return X, y
+    
     
     def get_train_data(self):
         return self.train_X, self.train_y
