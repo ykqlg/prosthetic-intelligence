@@ -11,7 +11,7 @@ python -u main.py \
 --no-dynamic \
 --train_label_file ./data/white_cup_user1_label.csv \
 --test_label_file ./data/white_cup_user2_label.csv \
---test_size 0.2 \
+--test_size 0.3 \
 --random_state 42 \
 --fs 1330 \
 --forward 0.02 \

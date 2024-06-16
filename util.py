@@ -3,6 +3,7 @@ from sklearn.manifold import TSNE
 import numpy as np
 import random
 import matplotlib
+import scipy.signal as signal
 
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 import matplotlib.pyplot as plt
@@ -11,6 +12,15 @@ import seaborn as sns
 # matplotlib.getLogger().setLevel(logging.WARNING)
 matplotlib.pyplot.set_loglevel (level = 'warning')
 
+def butter_lowpass_filter(data, cutoff, fs, order=5):
+    b, a = signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
+    y = signal.lfilter(b, a, data)
+    return y
+
+def butter_highpass_filter(data, cutoff, fs, order=5):
+    b, a = signal.butter(order, cutoff,fs=fs, btype='high', analog=False)
+    y = signal.filtfilt(b, a, data)
+    return y
 
 def plot_embedding(feat, label, projection='2d'):
     

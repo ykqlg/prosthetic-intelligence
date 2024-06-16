@@ -5,26 +5,7 @@ import glob
 import numpy as np
 
 import scipy.signal as signal
-
-
-def butter_lowpass(cutoff, fs, order=5):
-    return signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
-
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_lowpass(cutoff, fs, order=order)
-    y = signal.lfilter(b, a, data)
-    return y
-
-def butter_highpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
-    return b, a
-
-def butter_highpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_highpass(cutoff, fs, order=order)
-    y = signal.filtfilt(b, a, data)
-    return y
+from util import butter_highpass_filter,butter_lowpass_filter
 
 
 def get_latest_file(folder_path):
@@ -63,15 +44,15 @@ def plot_data(filename):
     ACC_Z_filtered = butter_highpass_filter(ACC_Z_filtered, 20, fs, order=5)
     
     # 创建一个包含三个子图的画布
-    fig, axes = plt.subplots(3, 1, figsize=(12, 7)) 
+    fig, axes = plt.subplots(3, 1, figsize=(9, 5)) 
     irange = 5000
     ylim = False
     # axes[0].set_title('ACC_X')
     # axes[1].set_title('ACC_Y')
     # axes[2].set_title('ACC_Z')
-    axes[0].set_ylabel("Acceleration of X (mg)")
-    axes[1].set_ylabel("Acceleration of Y (mg)")
-    axes[2].set_ylabel("Acceleration of Z (mg)")
+    axes[0].set_ylabel("$a_x$ (mg)")
+    axes[1].set_ylabel("$a_y$ (mg)")
+    axes[2].set_ylabel("$a_z$ (mg)")
     axes[2].set_xlabel("Time (s)")
     # for axe in axes:
     #     if ylim :axe.set_ylim(-irange, irange)
@@ -126,7 +107,7 @@ def plot_data2(filename):
 
 if __name__ == "__main__":
    
-    folder_path = './data/velcro'
+    folder_path = './data/test'
     latest_file = get_latest_file(folder_path)
 
     # print('latest_file:',latest_file)

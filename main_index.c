@@ -50,7 +50,7 @@ int16_t twoComplement16bit(u_int16_t hexData) {
     return result;
 }
 // 全局变量，表示数据文件夹绝对路径
-char dataFolderPath[100] = "/home/pi/wiringPi-BMI088/data/velcro";
+char dataFolderPath[100] = "/home/pi/prosthetic-intelligence/data/test";
 // 函数原型声明
 
 void writeRegister(int i2cFile, unsigned char regAddress, unsigned char value);       // 向某个i2c设备的某个寄存器写入数据

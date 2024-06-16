@@ -88,10 +88,10 @@ def feat_method():
         # 'get_x_mfcc_feat': myMFCC.get_x_mfcc_feat,
         # 'get_y_mfcc_feat': myMFCC.get_y_mfcc_feat,
         
-        # 'get_z_mfcc_feat': myMFCC.get_z_mfcc_feat,
-        # 'get_concat_mfcc_feat': myMFCC.get_concat_mfcc_feat,
-        # 'get_add_mfcc_feat': myMFCC.get_add_mfcc_feat,
-        # 'get_dft321_mfcc_feat': myMFCC.get_dft321_mfcc_feat,
+        'get_z_mfcc_feat': myMFCC.get_z_mfcc_feat,
+        'get_concat_mfcc_feat': myMFCC.get_concat_mfcc_feat,
+        'get_add_mfcc_feat': myMFCC.get_add_mfcc_feat,
+        'get_dft321_mfcc_feat': myMFCC.get_dft321_mfcc_feat,
         
         # 'get_x_stft_feat': myMFCC.get_x_stft_feat,
         # 'get_y_stft_feat': myMFCC.get_y_stft_feat,
@@ -101,7 +101,7 @@ def feat_method():
         # 'get_add_stft_feat': myMFCC.get_add_stft_feat,
         # 'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
         
-        'get_wavelet_feat': myMFCC.get_wavelet_feat,
+        # 'get_wavelet_feat': myMFCC.get_wavelet_feat,
         # 'get_dft321_wavelet_feat':myMFCC.get_dft321_wavelet_feat
     }
     results = []
@@ -283,7 +283,7 @@ def test():
     y_pred = model.predict(X_test_feat)
     y_prob = model.predict_proba(X_test_feat)[:, 1]
     # classification_report(y_test,y_pred,digits=4)
-    logger.debug(f"Predict Classification Report:\n{classification_report(y_test, y_pred, digits=4)}")
+    # logger.debug(f"Predict Classification Report:\n{classification_report(y_test, y_pred, digits=4)}")
     acc = accuracy_score(y_test, y_pred)
     print(f"acc: {acc}")
     visualize_evaluation(y_test, y_prob, y_pred, save_dir='./img')
@@ -311,12 +311,12 @@ def diff_obj():
         # 'get_x_stft_feat': myMFCC.get_x_stft_feat,
         # 'get_y_stft_feat': myMFCC.get_y_stft_feat,
         
-        'get_z_stft_feat': myMFCC.get_z_stft_feat,
-        'get_concat_stft_feat': myMFCC.get_concat_stft_feat,
+        # 'get_z_stft_feat': myMFCC.get_z_stft_feat,
+        # 'get_concat_stft_feat': myMFCC.get_concat_stft_feat,
         # 'get_add_stft_feat': myMFCC.get_add_stft_feat,
-        'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
+        # 'get_dft321_stft_feat':myMFCC.get_dft321_stft_feat,
         
-        # 'get_wavelet_feat': myMFCC.get_wavelet_feat,
+        'get_wavelet_feat': myMFCC.get_wavelet_feat,
         # 'get_dft321_wavelet_feat':myMFCC.get_dft321_wavelet_feat
     }
     results = []
@@ -373,7 +373,6 @@ def diff_obj():
     print("数据已写入 CSV 文件。")
     
     return
-
 
 def diff_obj_param():
     

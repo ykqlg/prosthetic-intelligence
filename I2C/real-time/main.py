@@ -9,36 +9,41 @@ import joblib
 import matplotlib.pyplot as plt
 import pandas as pd
 import time
-import sys
 from python_speech_features import mfcc
 import scipy.signal as signal
-
 
 import mylib_py as lib
 import ctypes
 import struct
 import time
+
+import sys
+sys.path.append('/home/pi/prosthetic-intelligence/I2C/')
+from util import butter_highpass_filter,butter_lowpass_filter,filter_window,detect_peaks
+
+
 sampleNum = 16000  # 采样数
 
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    b, a = signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
-    y = signal.lfilter(b, a, data)
-    return y
+# def butter_lowpass_filter(data, cutoff, fs, order=5):
+#     b, a = signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
+#     y = signal.lfilter(b, a, data)
+#     return y
 
-def butter_highpass_filter(data, cutoff, fs, order=5):
-    b, a = signal.butter(order, cutoff,fs=fs, btype='high', analog=False)
-    y = signal.filtfilt(b, a, data)
-    return y
+# def butter_highpass_filter(data, cutoff, fs, order=5):
+#     b, a = signal.butter(order, cutoff,fs=fs, btype='high', analog=False)
+#     y = signal.filtfilt(b, a, data)
+#     return y
 
-def filter_window(signal, fs):
-    signal_filtered_L = butter_lowpass_filter(signal, cutoff=500, fs=fs, order=6)
-    signal_filtered_H = butter_highpass_filter(signal_filtered_L, cutoff=20, fs=fs, order=5)
-    return signal_filtered_H
+# def filter_window(signal, fs):
+#     signal_filtered_L = butter_lowpass_filter(signal, cutoff=500, fs=fs, order=6)
+#     signal_filtered_H = butter_highpass_filter(signal_filtered_L, cutoff=20, fs=fs, order=5)
+#     return signal_filtered_H
 
 
-def detect_peaks(accel_window, threshold=1000):
-    peaks = signal.find_peaks(accel_window, height=threshold)[0]
-    return peaks
+# def detect_peaks(accel_window, threshold=1000):
+#     peaks = signal.find_peaks(accel_window, height=threshold)[0]
+#     return peaks
+
 def main_c():
     
     sensor_info = lib.SensorInfo()
@@ -95,7 +100,7 @@ def main():
     fs = 1330
     before_length = int(forward*fs)
     after_length = int(backward*fs)
-    print(f"before_length & after_length: {before_length} and {after_length}")
+    # print(f"before_length & after_length: {before_length} and {after_length}")
     svm_model = joblib.load('../../model/model.pkl') 
     buf = np.zeros((2,buf_size))
     
@@ -136,7 +141,7 @@ def main():
                 feat = mfcc(target_data[0], fs,numcep=10,nfilt=11,nfft=256).reshape(1, -1)
                 label = svm_model.predict(feat)[0]
                 confidence = svm_model.predict_proba(feat)[0]
-                print(f"Label: {label}, Confidence: {confidence[label]}")
+                print(f"Label: {label}, Confidence: {round(confidence[label],4)}")
 
                 # plot_data(target_data)
 

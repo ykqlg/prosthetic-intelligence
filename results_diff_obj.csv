@@ -1,4 +1,3 @@
 Method,Accuracy,F1-score
-get_z_stft_feat,73.33,74.83
-get_concat_stft_feat,79.13,80.48
-get_dft321_stft_feat,61.73,62.49
+get_wavelet_feat,72.87,74.95
+get_dft321_wavelet_feat,65.93,67.42

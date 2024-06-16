@@ -138,6 +138,8 @@ class MyMFCC:
     
     def single_axis_mfcc_feat(self,dataSet,axis):
         feat_list = []
+        # print(f"original signal's dimension: {dataSet[:,2].shape}")
+        
 
         for i in range(dataSet.shape[0]):
 
@@ -258,10 +260,8 @@ class MyMFCC:
         
         for i in range(dataSet.shape[0]):
             signal = dataSet[i, 2]
-            level = 3
-
             # 执行DWT
-            coeffs = pywt.wavedec(signal, 'haar', level=level)
+            coeffs = pywt.wavedec(signal, 'haar', level=7)
             approx_coeffs = coeffs[0]
             detail_coeffs = coeffs[1:]
             # print(detail_coeffs.shape)
@@ -270,14 +270,15 @@ class MyMFCC:
             
             
             # coefficients = cwt(signal, morlet, scales)
-            coefficients_flat = np.concatenate(detail_coeffs).ravel()
+            coefficients_flat = np.concatenate(coeffs).ravel()
             # coefficients_flat = np.abs(detail_coeffs).ravel()
             
             feat_list.append(coefficients_flat)
         feat = np.array(feat_list)
-        print(f"dimension: {feat.shape}")
+        # print(f"dimension: {feat.shape}")
         
         return feat
+    
     def get_dft321_wavelet_feat(self,dataSet):
         feat_list = []
         scales = np.arange(1, 2)
@@ -288,8 +289,13 @@ class MyMFCC:
             signal = dataSet[i, :]
             signal = DFT321f(signal.T)
             # signal = DFT321_smoothed(signal.T)
-            coefficients = cwt(signal, morlet, scales)
-            coefficients_flat = np.abs(coefficients).reshape(-1)
+            # coefficients = cwt(signal, morlet, scales)
+            coeffs = pywt.wavedec(signal, 'haar', level=7)
+            approx_coeffs = coeffs[0]
+            detail_coeffs = coeffs[1:]
+            # coefficients_flat = np.abs(coefficients).reshape(-1)
+            coefficients_flat = np.concatenate(coeffs).ravel()
+            
             feat_list.append(coefficients_flat)
         feat = np.array(feat_list)
         # print(f"dimension: {feat.shape[1]}")

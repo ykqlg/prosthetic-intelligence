@@ -5,17 +5,7 @@ import scipy.signal as signal
 from sklearn.model_selection import train_test_split
 from scipy.signal import find_peaks
 import random
-
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    
-    b, a = signal.butter(order, cutoff, fs=fs, btype='low', analog=False)
-    y = signal.lfilter(b, a, data)
-    return y
-
-def butter_highpass_filter(data, cutoff, fs, order=5):
-    b, a = signal.butter(order, cutoff,fs=fs, btype='high', analog=False)
-    y = signal.filtfilt(b, a, data)
-    return y
+from util import butter_highpass_filter,butter_lowpass_filter
 
 
 class MyDataset:

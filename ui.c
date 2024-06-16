@@ -8,7 +8,7 @@
 char dataFileName[256];
 FILE *file = NULL;
 GtkWidget *textEntry;
-char labelFilePath[] = "./I2C/data/velcro_label.csv"; // 全局变量保存文件路径
+char labelFilePath[] = "./data/test_label.csv"; // 全局变量保存文件路径
 
 void runDataCollector()
 {
